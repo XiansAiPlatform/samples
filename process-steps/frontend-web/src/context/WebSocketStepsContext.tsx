@@ -75,6 +75,7 @@ export const WebSocketStepsProvider: React.FC<Props> = ({ children }) => {
     activeStep = stepsContext.activeStep;
     isInitialized = stepsContext.isInitialized;
     setActiveStep = stepsContext.setActiveStep;
+
   } catch (error) {
     // StepsContext not available - use defaults for dashboard routes
     console.log('[WebSocketStepsContext] StepsContext not available, using defaults');
@@ -381,7 +382,7 @@ export const WebSocketStepsProvider: React.FC<Props> = ({ children }) => {
     addActivityLogRef.current = addActivityLog;
     clearActivityLogsRef.current = clearActivityLogs;
     setActiveStepRef.current = setActiveStep;
-  });
+  }, [activeStep, addChatMessage, setHandoffTyping, refreshChatHistoryForStep, getTargetStepFromHandoffMessage, addActivityLog, clearActivityLogs, setActiveStep]);
   
   // Effect to create and manage the WebSocketHub instance and its listeners
   useEffect(() => {
@@ -738,51 +739,90 @@ export const WebSocketStepsProvider: React.FC<Props> = ({ children }) => {
 
   // sendMessage using the new architecture
   const sendMessage = useCallback(async (text: string, data?: any, targetStepIndex?: number) => {
-    // Use target step if provided, otherwise use active step
-    const stepIndex = targetStepIndex !== undefined ? targetStepIndex : activeStep;
+    // Use target step if provided, otherwise use activeStepRef (which has the current value)
+    let stepIndex = targetStepIndex !== undefined ? targetStepIndex : activeStepRef.current;
     
-    if (!isInitialized || stepIndex === null) {
-      console.warn(`[WebSocketStepsContext] sendMessage called but not initialized (stepIndex: ${stepIndex})`);
+    // If we're on a step route but activeStepRef is still 0, try to get from URL as fallback
+    const currentUrl = window.location.pathname;
+    const isOnStepRoute = currentUrl.includes('/poa/') && !currentUrl.endsWith('/poa');
+    
+    if ((stepIndex === null || (stepIndex === 0 && isOnStepRoute)) && hasSteps) {
+      try {
+        // Get the current URL step from window.location
+        const stepSlugMatch = currentUrl.match(/\/([^/]+)$/); // Get last segment of URL
+        if (stepSlugMatch && stepSlugMatch[1]) {
+          const stepSlug = stepSlugMatch[1];
+          const foundIndex = steps.findIndex(step => step.slug === stepSlug);
+          if (foundIndex >= 0) {
+            stepIndex = foundIndex;
+            console.log(`[WebSocketStepsContext] 🔄 Corrected step index from URL: ${stepSlug} → ${stepIndex} (was ${activeStepRef.current})`);
+          }
+        }
+      } catch (error) {
+        console.warn('[WebSocketStepsContext] Failed to get step from URL:', error);
+      }
+    }
+    
+    // Default to 0 if we still don't have a valid step index
+    if (stepIndex === null) {
+      stepIndex = 0;
+      console.log('[WebSocketStepsContext] Defaulting to step index 0');
+    }
+    
+    console.log(`[WebSocketStepsContext] sendMessage called with:`, {
+      targetStepIndex,
+      calculatedStepIndex: stepIndex,
+      localActiveStep: activeStep,
+      activeStepRefCurrent: activeStepRef.current,
+      hasSteps,
+      stepsLength: steps.length
+    });
+    
+    if (!hasSteps && stepIndex !== 0) {
+      console.warn(`[WebSocketStepsContext] sendMessage called but no steps available (stepIndex: ${stepIndex})`);
       return;
     }
 
-    const step = steps[stepIndex];
-    if (!step?.botId) {
-      console.warn(`[WebSocketStepsContext] No bot configured for step ${stepIndex}`);
-      return;
-    }
+    if (hasSteps) {
+      const step = steps[stepIndex];
+      if (!step?.botId) {
+        console.warn(`[WebSocketStepsContext] No bot configured for step ${stepIndex}. Available steps:`, steps.map((s, i) => `${i}: ${s.title} (botId: ${s.botId})`));
+        return;
+      }
 
-    const agent = getAgentForStep(step);
-    if (!agent) {
-      console.warn(`[WebSocketStepsContext] Agent not found for step ${stepIndex}`);
-      return;
-    }
+      const agent = getAgentForStep(step);
+      if (!agent) {
+        console.warn(`[WebSocketStepsContext] Agent not found for step ${stepIndex}`);
+        return;
+      }
 
-    console.log(`[WebSocketStepsContext] 🎯 Sending message to step ${stepIndex} (${step.title}) agent: ${agent.id}`);
+      console.log(`[WebSocketStepsContext] 🎯 Sending message to step ${stepIndex} (${step.title}) agent: ${agent.id}`);
 
-    // Add user message to local chat history immediately (local echo)
-    // Use activeStep for chat history display, but send to target agent
-    if (!data && text) {
-      const userMessage: ChatMessage = {
-        id: `user-${Date.now()}-${Math.random()}`,
-        text: text,
-        direction: 'Incoming',
-        messageType: 'Chat',
-        timestamp: new Date(),
-        stepIndex: stepIndex, // Use the target step for proper message routing
-        threadId: getThreadId(stepIndex),
-        isHistorical: false // Explicitly mark as new for highlighting
-      };
-      addChatMessage(userMessage);
-    }
+      // Add user message to local chat history immediately (local echo)
+      if (!data && text) {
+        const userMessage: ChatMessage = {
+          id: `user-${Date.now()}-${Math.random()}`,
+          text: text,
+          direction: 'Incoming',
+          messageType: 'Chat',
+          timestamp: new Date(),
+          stepIndex: stepIndex, // Use the target step for proper message routing
+          threadId: getThreadId(stepIndex),
+          isHistorical: false // Explicitly mark as new for highlighting
+        };
+        addChatMessage(userMessage);
+      }
 
-    const sdk = hubRef.current!;
-    if (data) {
-      await sdk.sendData(agent.workflowType!, data);
+      const sdk = hubRef.current!;
+      if (data) {
+        await sdk.sendData(agent.workflowType!, data);
+      } else {
+        await sdk.sendChat(agent.workflowType!, text);
+      }
     } else {
-      await sdk.sendChat(agent.workflowType!, text);
+      console.warn(`[WebSocketStepsContext] Cannot send message - no steps available for stepIndex: ${stepIndex}`);
     }
-  }, [activeStep, steps, isInitialized, addChatMessage, getThreadId]);
+  }, [hasSteps, steps, addChatMessage, getThreadId]);
 
   // Data subscription methods
   const subscribeToData = useCallback((subscriberId: string, messageTypes: string[], callback: (message: any) => void, _stepIndex?: number) => {
