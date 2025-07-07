@@ -1,5 +1,5 @@
 import React from 'react';
-import ModuleDashboard from '../../components/ModuleDashboard';
+import { ModuleDashboard } from '../../';
 import { getModuleById } from '../../modules';
 import { steps } from '../steps';
 

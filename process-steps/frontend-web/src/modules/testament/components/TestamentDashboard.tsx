@@ -1,5 +1,5 @@
 import React from 'react';
-import ModuleDashboard from '../../components/ModuleDashboard';
+import { ModuleDashboard } from '../../';
 import { getModuleById } from '../../modules';
 
 const TestamentDashboard: React.FC = () => {
