@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { steps, getStepUrlBySlug, getStepUrl } from '../modules/poa/steps';
+import { steps } from '../modules/poa/steps';
+import { getStepUrlBySlug, getStepUrl } from '../modules/poa/utils/stepUtils';
 import { StepDefinition, StepTheme, StepBot } from '../components/types';
 
 // Re-export types for convenience

@@ -1,7 +1,8 @@
 import { EntityStore } from '../../../middleware/EntityStore';
 import AgentSDK from '@99xio/xians-sdk-typescript';
 import { BaseEntity } from '../../../types';
-import { getAgentById, generateDefaultMetadata, Agents } from '../steps';
+import { getAgentById, generateDefaultMetadata } from '../utils/stepUtils';
+import { Agents } from '../steps';
 
 export interface Principal {
   userId: string;

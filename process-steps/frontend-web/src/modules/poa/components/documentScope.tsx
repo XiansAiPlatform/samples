@@ -4,7 +4,7 @@ import { DocumentService, AuditResult } from '../services/DocumentService';
 import { useSteps } from '../../../context/StepsContext';
 import { getThemeColors, ThemeName } from '../../../components/theme';
 import AgentSDK from '@99xio/xians-sdk-typescript';
-import { getAgentById } from '../steps';
+import { getAgentById } from '../utils/stepUtils';
 import DocumentScopeHeader from './DocumentScopeHeader';
 
 const DocumentScope: React.FC = () => {

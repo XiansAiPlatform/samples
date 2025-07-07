@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { FiInfo, FiAlertTriangle, FiXCircle, FiChevronDown, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 import { useFindingsData } from '../hooks/useFindingsData';
-import { getAgentById, getStepIndexByBotId } from '../../../modules/poa/steps';
+import { getAgentById, getStepIndexByBotId } from '../../../modules/poa/utils/stepUtils';
 import { useWebSocketSteps } from '../../../context/WebSocketStepsContext';
 import { useSteps } from '../../../context/StepsContext';
 

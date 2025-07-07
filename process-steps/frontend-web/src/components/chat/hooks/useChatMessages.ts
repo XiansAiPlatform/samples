@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useSteps } from '../../../context/StepsContext';
 import { useWebSocketSteps } from '../../../context/WebSocketStepsContext';
-import { getAgentForStep } from '../../../modules/poa/steps';
+import { getAgentForStep } from '../../../modules/poa/utils/stepUtils';
 
 export const useChatMessages = () => {
   const { steps, activeStep, isInitialized } = useSteps();

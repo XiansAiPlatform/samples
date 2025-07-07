@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useSteps } from '../../../../../context/StepsContext';
 import { DocumentService, Document, AuditResult } from '../../../services/DocumentService';
 import AgentSDK from '@99xio/xians-sdk-typescript';
-import { getAgentById } from '../../../steps';
+import { getAgentById } from '../../../utils/stepUtils';
 
 type ConnectionStatus = 'initializing' | 'waiting_for_connection' | 'ready' | 'failed';
 

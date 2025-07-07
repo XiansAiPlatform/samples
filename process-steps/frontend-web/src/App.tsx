@@ -20,7 +20,10 @@ import { StepsProvider } from './context/StepsContext';
 import { SettingsProvider } from './context/SettingsContext';
 import { WebSocketStepsProvider } from './context/WebSocketStepsContext';
 import { EntityProvider } from './context/EntityContext';
-import { POA_ROUTE_PATTERN, getFirstStepUrl } from './modules/poa/steps';
+import { POA_ROUTE_PATTERN } from './modules/poa/steps';
+import { getFirstStepUrl } from './modules/poa/utils/stepUtils';
+import { modules } from './modules/modules';
+import DynamicModuleRoute from './modules/components/DynamicModuleRoute';
 
 const MainLayout: React.FC = () => {
   const [mobileChatOpen, setMobileChatOpen] = useState(false);
@@ -126,9 +129,7 @@ const MainLayout: React.FC = () => {
 const PowerOfAttorneyWorkflow: React.FC = () => (
   <StepsProvider>
     <EntityProvider>
-      <WebSocketStepsProvider>
-        <MainLayout />
-      </WebSocketStepsProvider>
+      <MainLayout />
     </EntityProvider>
   </StepsProvider>
 );
@@ -136,16 +137,27 @@ const PowerOfAttorneyWorkflow: React.FC = () => (
 const App: React.FC = () => (
   <SettingsProvider>
     <Router>
-      <Routes>
-        {/* Redirect root to the first step with new document */}
-        <Route path="/" element={<Navigate to={getFirstStepUrl('new')} replace />} />
-        
-        {/* Power of Attorney workflow routes with document ID */}
-        <Route path={POA_ROUTE_PATTERN} element={<PowerOfAttorneyWorkflow />} />
-        
-        {/* Catch-all redirect to first step with new document */}
-        <Route path="*" element={<Navigate to={getFirstStepUrl('new')} replace />} />
-      </Routes>
+      <WebSocketStepsProvider>
+        <Routes>
+          {/* Redirect root to the first module dashboard */}
+          <Route path="/" element={<Navigate to={modules.length > 0 ? `/${modules[0].slug}` : "/poa"} replace />} />
+          
+          {/* Dynamic module dashboard routes */}
+          {modules.map((module) => (
+            <Route 
+              key={module.id}
+              path={`/${module.slug}`} 
+              element={<DynamicModuleRoute moduleSlug={module.slug} />} 
+            />
+          ))}
+          
+          {/* Power of Attorney workflow routes with document ID */}
+          <Route path={POA_ROUTE_PATTERN} element={<PowerOfAttorneyWorkflow />} />
+          
+          {/* Catch-all redirect to first module dashboard */}
+          <Route path="*" element={<Navigate to={modules.length > 0 ? `/${modules[0].slug}` : "/poa"} replace />} />
+        </Routes>
+      </WebSocketStepsProvider>
     </Router>
   </SettingsProvider>
 );

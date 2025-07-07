@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { AiOutlineRobot } from 'react-icons/ai';
 import { useSteps } from '../context/StepsContext';
 import { getThemeColors, ThemeName } from './theme';
-import { getStepUrl } from '../modules/poa/steps';
+import { getStepUrl } from '../modules/poa/utils/stepUtils';
 
 const StepsBar: React.FC = () => {
   const { steps, activeStep, documentId, isInitialized } = useSteps();

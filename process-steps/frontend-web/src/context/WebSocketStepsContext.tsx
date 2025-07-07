@@ -1,9 +1,9 @@
-import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { ChatMessage, ConnectionState, ActivityData } from '../types';
 import AgentSDK from '@99xio/xians-sdk-typescript';
 import { useSteps } from './StepsContext';
 import { useSettings } from './SettingsContext';
-import { getAgentForStep, getAgentById, getStepIndexFromHandoffMessage } from '../modules/poa/steps';
+import { getAgentForStep, getAgentById, getStepIndexFromHandoffMessage } from '../modules/poa/utils/stepUtils';
 
 interface WebSocketStepsContextType {
   // Connection states
@@ -63,8 +63,25 @@ interface Props {
 }
 
 export const WebSocketStepsProvider: React.FC<Props> = ({ children }) => {
-  const { steps, activeStep, isInitialized, setActiveStep } = useSteps();
+  // Use steps context only if available (optional for dashboard routes)
+  let steps: any[] = [];
+  let activeStep: number | null = null;
+  let isInitialized = false;
+  let setActiveStep: any = () => {};
+  
+  try {
+    const stepsContext = useSteps();
+    steps = stepsContext.steps;
+    activeStep = stepsContext.activeStep;
+    isInitialized = stepsContext.isInitialized;
+    setActiveStep = stepsContext.setActiveStep;
+  } catch (error) {
+    // StepsContext not available - use defaults for dashboard routes
+    console.log('[WebSocketStepsContext] StepsContext not available, using defaults');
+  }
+  
   const { settings } = useSettings();
+  const hasSteps = steps.length > 0 && isInitialized;
   
   const [connectionStates, setConnectionStates] = useState<Map<number, ConnectionState>>(new Map());
   const [chatMessages, setChatMessages] = useState<Map<string, ChatMessage[]>>(new Map());
@@ -77,15 +94,51 @@ export const WebSocketStepsProvider: React.FC<Props> = ({ children }) => {
   const processedHistoricalMessages = useRef<Set<string>>(new Set());
   const handoffNavigationTimeout = useRef<number | null>(null);
   const handoffTypingTimers = useRef<Map<number, number>>(new Map());
+  const isWebSocketInitialized = useRef<boolean>(false);
+  
+  // Refs for current values to avoid stale closures in event handlers
+  const activeStepRef = useRef<number | null>(null);
+  const addChatMessageRef = useRef<any>(null);
+  const setHandoffTypingRef = useRef<any>(null);
+  const refreshChatHistoryForStepRef = useRef<any>(null);
+  const getTargetStepFromHandoffMessageRef = useRef<any>(null);
+  const addActivityLogRef = useRef<any>(null);
+  const clearActivityLogsRef = useRef<any>(null);
+  const setActiveStepRef = useRef<any>(null);
+
+  // Simple settings tracking - only re-initialize if essential settings actually change
+  const lastSettingsRef = useRef<string>('');
+  const essentialSettings = {
+    agentWebsocketUrl: settings.agentWebsocketUrl,
+    Authorization: settings.Authorization || settings.agentApiKey,
+    tenantId: settings.tenantId,
+    participantId: settings.participantId
+  };
+  
+  const settingsHash = JSON.stringify(essentialSettings);
+  const hasValidSettings = essentialSettings.agentWebsocketUrl && 
+                          essentialSettings.Authorization && 
+                          essentialSettings.tenantId && 
+                          essentialSettings.participantId;
+  
+  // Only trigger re-initialization if settings are valid and actually changed
+  const shouldInitialize = hasValidSettings && (lastSettingsRef.current !== settingsHash);
+  if (shouldInitialize) {
+    console.log('[WebSocketStepsContext] Settings changed, will re-initialize:', {
+      from: lastSettingsRef.current,
+      to: settingsHash
+    });
+    lastSettingsRef.current = settingsHash;
+  }
 
   // Helper function to get workflowType from stepIndex
   const getWorkflowTypeForStep = useCallback((stepIndex: number): string | null => {
-    if (stepIndex < 0 || stepIndex >= steps.length) return null;
+    if (!hasSteps || stepIndex < 0 || stepIndex >= steps.length) return null;
     const step = steps[stepIndex];
     if (!step?.botId) return null;
     const agent = getAgentById(step.botId);
     return agent?.workflowType || null;
-  }, [steps]);
+  }, [steps, hasSteps]);
 
   // Helper function to get chat messages for a specific step
   const getChatMessagesForStep = useCallback((stepIndex: number): ChatMessage[] => {
@@ -318,22 +371,81 @@ export const WebSocketStepsProvider: React.FC<Props> = ({ children }) => {
     }
   }, [steps, setHandoffTyping]);
   
+  // Update refs with current values to avoid stale closures in event handlers
+  useEffect(() => {
+    activeStepRef.current = activeStep;
+    addChatMessageRef.current = addChatMessage;
+    setHandoffTypingRef.current = setHandoffTyping;
+    refreshChatHistoryForStepRef.current = refreshChatHistoryForStep;
+    getTargetStepFromHandoffMessageRef.current = getTargetStepFromHandoffMessage;
+    addActivityLogRef.current = addActivityLog;
+    clearActivityLogsRef.current = clearActivityLogs;
+    setActiveStepRef.current = setActiveStep;
+  });
+  
   // Effect to create and manage the WebSocketHub instance and its listeners
   useEffect(() => {
-    // Only proceed if we have steps data available
-    if (steps.length === 0 || !isInitialized) {
+    // For dashboard routes, we can initialize WebSocket even without steps
+    if (!hasSteps) {
+      console.log('[WebSocketStepsContext] Initializing for dashboard route (no steps required):', { stepsLength: steps.length, isInitialized });
+    }
+    
+    // Check if we have valid settings for WebSocket connection
+    const hasValidSettings = settings.agentWebsocketUrl && 
+                            (settings.Authorization || settings.agentApiKey) && 
+                            settings.tenantId && 
+                            settings.participantId;
+    
+    if (!hasValidSettings) {
+      console.log('[WebSocketStepsContext] Not initializing - settings not ready:', {
+        hasWebsocketUrl: !!settings.agentWebsocketUrl,
+        hasAuth: !!(settings.Authorization || settings.agentApiKey),
+        hasTenantId: !!settings.tenantId,
+        hasParticipantId: !!settings.participantId
+      });
       return;
     }
     
-    console.log('[WebSocketStepsContext] Initializing WebSocket connections...');
+    // Skip re-initialization if WebSocket is already properly set up and settings haven't changed
+    if (isWebSocketInitialized.current && hubRef.current && !shouldInitialize) {
+      console.log('[WebSocketStepsContext] WebSocket already initialized with current settings, skipping re-initialization');
+      return;
+    }
     
-    // Use shared SDK instance – DocumentService has already initialised and connected it.
+    console.log('[WebSocketStepsContext] Initializing WebSocket connections with valid settings...');
+    
+    // Try to get existing shared SDK or initialize one with proper settings
     let sdk: AgentSDK;
     try {
       sdk = AgentSDK.getShared();
+      console.log('[WebSocketStepsContext] Using existing shared SDK instance');
     } catch {
-      // Fallback: initialise with empty settings to satisfy type, it will be configured elsewhere
-      console.log('[WebSocketStepsContext] Creating new SDK instance');
+      // Initialize shared SDK with validated settings
+      console.log('[WebSocketStepsContext] Initializing shared SDK instance with settings:', {
+        agentWebsocketUrl: settings.agentWebsocketUrl,
+        hasAuth: !!(settings.Authorization || settings.agentApiKey),
+        tenantId: settings.tenantId,
+        participantId: settings.participantId
+      });
+      
+      // Try to trigger DocumentService initialization first for proper SDK setup
+      try {
+        // Use dynamic import to avoid circular dependencies
+        import('../modules/poa/services/DocumentService').then(({ DocumentService }) => {
+          try {
+            DocumentService.getInstance();
+            console.log('[WebSocketStepsContext] DocumentService initialized successfully');
+          } catch (initError) {
+            console.warn('[WebSocketStepsContext] DocumentService initialization failed:', initError);
+          }
+        }).catch((importError) => {
+          console.warn('[WebSocketStepsContext] Could not import DocumentService:', importError);
+        });
+      } catch (docServiceError) {
+        console.warn('[WebSocketStepsContext] DocumentService setup failed:', docServiceError);
+      }
+      
+      // Create our own shared SDK instance
       sdk = AgentSDK.initShared({
         agentWebsocketUrl: settings.agentWebsocketUrl,
         Authorization: settings.Authorization || settings.agentApiKey || '',
@@ -348,6 +460,12 @@ export const WebSocketStepsProvider: React.FC<Props> = ({ children }) => {
     hubRef.current = hub;
 
     const workflowIdToStepIndex = (workflowId: string): number => {
+      // If no steps available (dashboard route), return 0 as default
+      if (!hasSteps || steps.length === 0) {
+        console.log(`[WebSocketStepsContext] No steps available, using default step index 0 for workflowId "${workflowId}"`);
+        return 0;
+      }
+      
       // Find all steps that match this workflowType
       const matchingSteps: number[] = [];
       steps.forEach((step, index) => {
@@ -361,9 +479,9 @@ export const WebSocketStepsProvider: React.FC<Props> = ({ children }) => {
       console.log(`[WebSocketStepsContext] Found ${matchingSteps.length} steps matching workflowId "${workflowId}": [${matchingSteps.join(', ')}]`);
       
       // If multiple steps share the same workflowType, route to the active step if it's one of them
-      if (matchingSteps.length > 1 && activeStep !== null && matchingSteps.includes(activeStep)) {
-        console.log(`[WebSocketStepsContext] Multiple steps found, routing to active step: ${activeStep}`);
-        return activeStep;
+      if (matchingSteps.length > 1 && activeStepRef.current !== null && matchingSteps.includes(activeStepRef.current)) {
+        console.log(`[WebSocketStepsContext] Multiple steps found, routing to active step: ${activeStepRef.current}`);
+        return activeStepRef.current;
       }
       
       // Otherwise, use the first matching step (original behavior)
@@ -373,6 +491,13 @@ export const WebSocketStepsProvider: React.FC<Props> = ({ children }) => {
     };
 
     const handleConnectionChange = (ev: { workflowId: string; data: ConnectionState }) => {
+      // If no steps available (dashboard route), still update global connection state
+      if (!hasSteps || steps.length === 0) {
+        console.log(`[WebSocketStepsContext] Connection change for workflowId "${ev.workflowId}" (no steps to update)`);
+        setIsConnected(ev.data.status === 'connected');
+        return;
+      }
+      
       // Find all steps that use this workflowType and update their connection states
       const matchingSteps: number[] = [];
       steps.forEach((step, index) => {
@@ -439,7 +564,7 @@ export const WebSocketStepsProvider: React.FC<Props> = ({ children }) => {
             
             // Handle handoff typing clearing immediately since processing is complete
             console.log(`[WebSocketStepsContext] 💬 Clearing handoff typing immediately for step ${chatMessage.stepIndex} - ActivityLog attached`);
-            setHandoffTyping(chatMessage.stepIndex, false);
+            setHandoffTypingRef.current?.(chatMessage.stepIndex, false);
             
             return newMap;
           } else {
@@ -449,7 +574,7 @@ export const WebSocketStepsProvider: React.FC<Props> = ({ children }) => {
             console.log(`[WebSocketStepsContext] 💬 Clearing handoff typing with delay for step ${chatMessage.stepIndex} - no ActivityLog`);
             const timerId = setTimeout(() => {
               console.log(`[WebSocketStepsContext] 💬 Clearing handoff typing indicator for step ${chatMessage.stepIndex} after delay`);
-              setHandoffTyping(chatMessage.stepIndex, false);
+              setHandoffTypingRef.current?.(chatMessage.stepIndex, false);
               handoffTypingTimers.current.delete(chatMessage.stepIndex);
             }, 1000); // Shorter 1 second delay for cases without ActivityLog
             handoffTypingTimers.current.set(chatMessage.stepIndex, timerId);
@@ -460,7 +585,7 @@ export const WebSocketStepsProvider: React.FC<Props> = ({ children }) => {
       }
       
       // Always add the message to chat history
-      addChatMessage(chatMessage);
+      addChatMessageRef.current?.(chatMessage);
     };
 
     const handleHandoff = (handoff: any) => {
@@ -468,7 +593,7 @@ export const WebSocketStepsProvider: React.FC<Props> = ({ children }) => {
         workflowId: handoff.workflowId,
         text: handoff.text,
         isHistorical: handoff.isHistorical,
-        currentStep: activeStep
+        currentStep: activeStepRef.current
       });
       
       // Only process navigation for new handoff messages, not historical ones
@@ -496,20 +621,20 @@ export const WebSocketStepsProvider: React.FC<Props> = ({ children }) => {
       };
       
       // Determine target step from handoff message
-      const targetStepIndex = getTargetStepFromHandoffMessage(handoffChatMessage);
+      const targetStepIndex = getTargetStepFromHandoffMessageRef.current?.(handoffChatMessage);
       
-      console.log(`[WebSocketStepsContext] 🧭 Navigation decision: targetStepIndex=${targetStepIndex}, activeStep=${activeStep}`);
+      console.log(`[WebSocketStepsContext] 🧭 Navigation decision: targetStepIndex=${targetStepIndex}, activeStep=${activeStepRef.current}`);
       
-      if (targetStepIndex !== null && targetStepIndex !== activeStep) {
+      if (targetStepIndex !== null && targetStepIndex !== activeStepRef.current) {
         console.log(`[WebSocketStepsContext] ✅ Initiating navigation to step ${targetStepIndex} due to handoff`);
         
         // Refresh chat history for the target step to get complete conversation context
-        refreshChatHistoryForStep(targetStepIndex);
+        refreshChatHistoryForStepRef.current?.(targetStepIndex);
         
         // Navigate to the target step after a short delay to ensure the handoff message is visible
         handoffNavigationTimeout.current = setTimeout(() => {
           console.log(`[WebSocketStepsContext] 🚀 Executing setActiveStep(${targetStepIndex})`);
-          setActiveStep(targetStepIndex);
+          setActiveStepRef.current?.(targetStepIndex);
           handoffNavigationTimeout.current = null;
         }, 800); // Reduced delay for better UX
         
@@ -517,7 +642,7 @@ export const WebSocketStepsProvider: React.FC<Props> = ({ children }) => {
         console.warn(`[WebSocketStepsContext] ⚠️ Could not determine target step from handoff message`);
       } else {
         console.log(`[WebSocketStepsContext] 🔄 Already on target step ${targetStepIndex}, refreshing chat history`);
-        refreshChatHistoryForStep(targetStepIndex);
+        refreshChatHistoryForStepRef.current?.(targetStepIndex);
       }
     };
 
@@ -550,10 +675,10 @@ export const WebSocketStepsProvider: React.FC<Props> = ({ children }) => {
         
         if (activityData && activityData.messageType === 'ActivityLog') {
           // Add to pending ActivityLog for the current active step
-          if (activeStep !== null) {
-            console.log('[WebSocketStepsContext] 📋 Adding ActivityLog to pending list for step:', activeStep);
+          if (activeStepRef.current !== null) {
+            console.log('[WebSocketStepsContext] 📋 Adding ActivityLog to pending list for step:', activeStepRef.current);
             
-            addActivityLog(activeStep, {
+            addActivityLogRef.current?.(activeStepRef.current, {
               summary: activityData.summary,
               details: activityData.details,
               success: activityData.success,
@@ -573,10 +698,16 @@ export const WebSocketStepsProvider: React.FC<Props> = ({ children }) => {
     );
 
     console.log('[WebSocketStepsContext] Event listeners, handoff subscription, and ActivityLog subscription attached');
+    
+    // Mark as successfully initialized
+    isWebSocketInitialized.current = true;
 
     // Cleanup function
     return () => {
       console.log('[WebSocketStepsContext] Cleaning up event listeners and subscriptions');
+      
+      // Mark as no longer initialized
+      isWebSocketInitialized.current = false;
       
       // Clear navigation timeout
       if (handoffNavigationTimeout.current) {
@@ -603,7 +734,7 @@ export const WebSocketStepsProvider: React.FC<Props> = ({ children }) => {
       
       hubRef.current = null;
     };
-  }, [steps, isInitialized, settings.agentWebsocketUrl, settings.Authorization, settings.agentApiKey, settings.tenantId, settings.participantId, settings.defaultMetadata, addChatMessage, setHandoffTyping, refreshChatHistoryForStep, getTargetStepFromHandoffMessage, addActivityLog, clearActivityLogs, activeStep]);
+  }, [steps, isInitialized, settingsHash]);
 
   // sendMessage using the new architecture
   const sendMessage = useCallback(async (text: string, data?: any, targetStepIndex?: number) => {
