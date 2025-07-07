@@ -3,7 +3,8 @@ import { ChatMessage, ConnectionState, ActivityData } from '../types';
 import AgentSDK from '@99xio/xians-sdk-typescript';
 import { useSteps } from './StepsContext';
 import { useSettings } from './SettingsContext';
-import { getAgentForStep, getAgentById, getStepIndexFromHandoffMessage } from '../modules/poa/utils/stepUtils';
+import { getModuleBySlug } from '../modules/modules';
+import { useLocation } from 'react-router-dom';
 
 interface WebSocketStepsContextType {
   // Connection states
@@ -63,6 +64,10 @@ interface Props {
 }
 
 export const WebSocketStepsProvider: React.FC<Props> = ({ children }) => {
+  // Use location to get current module
+  const location = useLocation();
+  const moduleSlug = location.pathname.split('/')[1];
+  
   // Use steps context only if available (optional for dashboard routes)
   let steps: any[] = [];
   let activeStep: number | null = null;
@@ -82,7 +87,16 @@ export const WebSocketStepsProvider: React.FC<Props> = ({ children }) => {
   }
   
   const { settings } = useSettings();
-  const hasSteps = steps.length > 0 && isInitialized;
+  
+  // Determine if we're on a workflow route vs dashboard route from URL pattern
+  // Parse pathname directly since useParams doesn't work above Routes level
+  const pathSegments = location.pathname.split('/').filter(Boolean);
+  const isWorkflowRoute = pathSegments.length >= 3; // e.g., ['poa', 'documentId', 'stepSlug']
+  const documentId = isWorkflowRoute ? pathSegments[1] : undefined;
+  const stepSlug = isWorkflowRoute ? pathSegments[2] : undefined;
+  const hasSteps = isWorkflowRoute ? (steps.length > 0 && isInitialized) : false;
+  
+
   
   const [connectionStates, setConnectionStates] = useState<Map<number, ConnectionState>>(new Map());
   const [chatMessages, setChatMessages] = useState<Map<string, ChatMessage[]>>(new Map());
@@ -97,6 +111,88 @@ export const WebSocketStepsProvider: React.FC<Props> = ({ children }) => {
   const handoffTypingTimers = useRef<Map<number, number>>(new Map());
   const isWebSocketInitialized = useRef<boolean>(false);
   
+  // Cache for loaded module agents
+  const agentsCache = useRef<any[] | null>(null);
+  const agentsCacheModuleSlug = useRef<string | null>(null);
+  
+  // Dynamic helper functions that work with any module
+  const getAgentsForCurrentModule = useCallback(async () => {
+    // Use cache if available and for same module
+    if (agentsCache.current && agentsCacheModuleSlug.current === moduleSlug) {
+      return agentsCache.current;
+    }
+    
+    try {
+      const module = getModuleBySlug(moduleSlug);
+      if (!module) return [];
+      
+      const { Agents } = await module.stepsLoader();
+      
+      // Update cache
+      agentsCache.current = Agents;
+      agentsCacheModuleSlug.current = moduleSlug;
+      
+      return Agents;
+    } catch (error) {
+      console.warn('Failed to load agents for module:', moduleSlug, error);
+      return [];
+    }
+  }, [moduleSlug]);
+
+  const getAgentById = useCallback(async (botId: string) => {
+    const agents = await getAgentsForCurrentModule();
+    return agents.find((agent: any) => agent.id === botId) || null;
+  }, [getAgentsForCurrentModule]);
+
+  const getAgentForStep = useCallback(async (stepIndex: number) => {
+    if (!hasSteps || stepIndex < 0 || stepIndex >= steps.length) return null;
+    const step = steps[stepIndex];
+    if (!step?.botId) return null;
+    return await getAgentById(step.botId);
+  }, [steps, hasSteps, getAgentById]);
+
+  const getStepIndexFromHandoffMessage = useCallback(async (message: { text: string; data?: any; workflowId?: string }) => {
+    try {
+      const agents = await getAgentsForCurrentModule();
+      
+      // Extract workflowId from various possible locations
+      const workflowId = message.workflowId || 
+                        message.data?.workflowId || 
+                        message.data?.WorkflowId || 
+                        message.data?.metadata?.workflowId ||
+                        message.data?.metadata?.WorkflowId ||
+                        message.data?.targetWorkflowId ||
+                        message.data?.TargetWorkflowId ||
+                        message.data?.handoffTo ||
+                        message.data?.HandoffTo;
+      
+      if (!workflowId) {
+        console.warn('[WebSocketStepsContext] No workflowId found in handoff message');
+        return null;
+      }
+      
+      // Find matching agent
+      const targetAgent = agents.find((agent: any) => 
+        agent.workflowType === workflowId ||
+        agent.workflowType?.includes(workflowId) ||
+        agent.workflowType?.endsWith(workflowId)
+      );
+      
+      if (!targetAgent) {
+        console.warn(`[WebSocketStepsContext] No agent found for workflowId: ${workflowId}`);
+        return null;
+      }
+      
+      // Find step index for this agent
+      const stepIndex = steps.findIndex(step => step.botId === targetAgent.id);
+      return stepIndex >= 0 ? stepIndex : null;
+      
+    } catch (error) {
+      console.error('[WebSocketStepsContext] Error in getStepIndexFromHandoffMessage:', error);
+      return null;
+    }
+  }, [getAgentsForCurrentModule, steps]);
+  
   // Refs for current values to avoid stale closures in event handlers
   const activeStepRef = useRef<number | null>(null);
   const addChatMessageRef = useRef<any>(null);
@@ -107,51 +203,59 @@ export const WebSocketStepsProvider: React.FC<Props> = ({ children }) => {
   const clearActivityLogsRef = useRef<any>(null);
   const setActiveStepRef = useRef<any>(null);
 
-  // Simple settings tracking - only re-initialize if essential settings actually change
+  // Settings tracking refs
   const lastSettingsRef = useRef<string>('');
-  const essentialSettings = {
-    agentWebsocketUrl: settings.agentWebsocketUrl,
-    Authorization: settings.Authorization || settings.agentApiKey,
-    tenantId: settings.tenantId,
-    participantId: settings.participantId
-  };
-  
-  const settingsHash = JSON.stringify(essentialSettings);
-  const hasValidSettings = essentialSettings.agentWebsocketUrl && 
-                          essentialSettings.Authorization && 
-                          essentialSettings.tenantId && 
-                          essentialSettings.participantId;
-  
-  // Only trigger re-initialization if settings are valid and actually changed
-  const shouldInitialize = hasValidSettings && (lastSettingsRef.current !== settingsHash);
-  if (shouldInitialize) {
-    console.log('[WebSocketStepsContext] Settings changed, will re-initialize:', {
-      from: lastSettingsRef.current,
-      to: settingsHash
-    });
-    lastSettingsRef.current = settingsHash;
-  }
 
   // Helper function to get workflowType from stepIndex
-  const getWorkflowTypeForStep = useCallback((stepIndex: number): string | null => {
+  const getWorkflowTypeForStep = useCallback(async (stepIndex: number): Promise<string | null> => {
     if (!hasSteps || stepIndex < 0 || stepIndex >= steps.length) return null;
     const step = steps[stepIndex];
     if (!step?.botId) return null;
-    const agent = getAgentById(step.botId);
+    const agent = await getAgentById(step.botId);
     return agent?.workflowType || null;
-  }, [steps, hasSteps]);
+  }, [steps, hasSteps, getAgentById]);
 
   // Helper function to get chat messages for a specific step
   const getChatMessagesForStep = useCallback((stepIndex: number): ChatMessage[] => {
-    const workflowType = getWorkflowTypeForStep(stepIndex);
-    if (!workflowType) return [];
+    // This is synchronous but workflowType lookup is async - we'll use a cached approach
+    if (!hasSteps || stepIndex < 0 || stepIndex >= steps.length) return [];
+    const step = steps[stepIndex];
+    if (!step?.botId) return [];
+    
+    // Try to get agent from cache first
+    let agent = agentsCache.current?.find((a: any) => a.id === step.botId);
+    
+    // If not in cache, we can't get the workflowType synchronously
+    // This will be resolved when the cache is populated
+    if (!agent) {
+      console.log(`[WebSocketStepsContext] Agent not in cache for step ${stepIndex}, botId: ${step.botId}`);
+      return [];
+    }
+    
+    const workflowType = agent?.workflowType;
+    if (!workflowType) {
+      console.log(`[WebSocketStepsContext] No workflowType for agent: ${step.botId}`);
+      return [];
+    }
+    
     return chatMessages.get(workflowType) || [];
-  }, [chatMessages, getWorkflowTypeForStep]);
+  }, [chatMessages, steps, hasSteps]);
 
   // Helper functions for message management
-  const addChatMessage = useCallback((message: ChatMessage) => {
-    // Get workflowType for this message
-    const workflowType = getWorkflowTypeForStep(message.stepIndex);
+  const addChatMessage = useCallback(async (message: ChatMessage) => {
+    // Get workflowType for this message - ensure agents are loaded first
+    let workflowType: string | null = null;
+    
+    if (hasSteps && message.stepIndex >= 0 && message.stepIndex < steps.length) {
+      const step = steps[message.stepIndex];
+      if (step?.botId) {
+        // Ensure agents are loaded
+        const agents = await getAgentsForCurrentModule();
+        const agent = agents.find((a: any) => a.id === step.botId);
+        workflowType = agent?.workflowType || null;
+      }
+    }
+    
     if (!workflowType) {
       console.warn(`[WebSocketStepsContext] No workflowType found for step ${message.stepIndex}, skipping message`);
       return;
@@ -220,14 +324,14 @@ export const WebSocketStepsProvider: React.FC<Props> = ({ children }) => {
     if (message.threadId) {
       setThreadIds(prev => new Map(prev).set(message.stepIndex, message.threadId!));
     }
-  }, [getWorkflowTypeForStep]);
+  }, [hasSteps, steps, getAgentsForCurrentModule]);
 
   const getThreadId = useCallback((stepIndex: number): string | undefined => {
     return threadIds.get(stepIndex);
   }, [threadIds]);
   
   // Helper function to determine target step index from handoff message
-  const getTargetStepFromHandoffMessage = useCallback((message: ChatMessage): number | null => {
+  const getTargetStepFromHandoffMessage = useCallback(async (message: ChatMessage): Promise<number | null> => {
     console.log(`[WebSocketStepsContext] 🔍 Processing handoff message for target step detection`);
     
     // Extract workflowId from the message data - check multiple possible locations
@@ -245,7 +349,7 @@ export const WebSocketStepsProvider: React.FC<Props> = ({ children }) => {
     console.log(`[WebSocketStepsContext] 🎯 Extracted workflowId:`, workflowId);
     
     // Delegate to the step-specific utility function
-    const result = getStepIndexFromHandoffMessage({
+    const result = await getStepIndexFromHandoffMessage({
       text: message.text,
       data: message.data,
       workflowId: workflowId
@@ -253,7 +357,7 @@ export const WebSocketStepsProvider: React.FC<Props> = ({ children }) => {
     
     console.log(`[WebSocketStepsContext] 📍 Step mapping result:`, result);
     return result;
-  }, []);
+  }, [getStepIndexFromHandoffMessage]);
 
   // Helper function to set handoff typing state for a specific step
   const setHandoffTyping = useCallback((stepIndex: number, isTyping: boolean) => {
@@ -315,7 +419,7 @@ export const WebSocketStepsProvider: React.FC<Props> = ({ children }) => {
       return;
     }
     
-    const targetAgent = getAgentById(targetStep.botId);
+    const targetAgent = await getAgentById(targetStep.botId);
     if (!targetAgent) {
       return;
     }
@@ -370,8 +474,24 @@ export const WebSocketStepsProvider: React.FC<Props> = ({ children }) => {
       // Hide typing indicator on error
       setHandoffTyping(targetStepIndex, false);
     }
-  }, [steps, setHandoffTyping]);
+  }, [steps, setHandoffTyping, getAgentById]);
   
+  // Effect to pre-populate agents cache when module/steps change
+  useEffect(() => {
+    const populateAgentsCache = async () => {
+      if (moduleSlug && steps.length > 0) {
+        try {
+          const agents = await getAgentsForCurrentModule();
+          console.log(`[WebSocketStepsContext] Populated agents cache with ${agents.length} agents for module: ${moduleSlug}`);
+        } catch (error) {
+          console.warn('[WebSocketStepsContext] Failed to populate agents cache:', error);
+        }
+      }
+    };
+    
+    populateAgentsCache();
+  }, [moduleSlug, steps.length, getAgentsForCurrentModule]);
+
   // Update refs with current values to avoid stale closures in event handlers
   useEffect(() => {
     activeStepRef.current = activeStep;
@@ -386,9 +506,30 @@ export const WebSocketStepsProvider: React.FC<Props> = ({ children }) => {
   
   // Effect to create and manage the WebSocketHub instance and its listeners
   useEffect(() => {
+    // For workflow routes, wait for steps to be loaded before initializing WebSocket
+    if (isWorkflowRoute && !isInitialized) {
+      console.log('[WebSocketStepsContext] Workflow route detected but steps not yet loaded, waiting...', { 
+        stepsLength: steps.length, 
+        isInitialized,
+        isWorkflowRoute,
+        hasSteps
+      });
+      return;
+    }
+    
     // For dashboard routes, we can initialize WebSocket even without steps
-    if (!hasSteps) {
-      console.log('[WebSocketStepsContext] Initializing for dashboard route (no steps required):', { stepsLength: steps.length, isInitialized });
+    if (!isWorkflowRoute) {
+      console.log('[WebSocketStepsContext] Initializing for dashboard route (no steps required):', { 
+        stepsLength: steps.length, 
+        isInitialized, 
+        isWorkflowRoute 
+      });
+    } else {
+      console.log('[WebSocketStepsContext] Initializing for workflow route with steps loaded:', { 
+        stepsLength: steps.length, 
+        isInitialized, 
+        isWorkflowRoute 
+      });
     }
     
     // Check if we have valid settings for WebSocket connection
@@ -407,13 +548,47 @@ export const WebSocketStepsProvider: React.FC<Props> = ({ children }) => {
       return;
     }
     
-    // Skip re-initialization if WebSocket is already properly set up and settings haven't changed
-    if (isWebSocketInitialized.current && hubRef.current && !shouldInitialize) {
+    // Calculate settings hash and check if they've changed
+    const essentialSettings = {
+      agentWebsocketUrl: settings.agentWebsocketUrl,
+      Authorization: settings.Authorization || settings.agentApiKey,
+      tenantId: settings.tenantId,
+      participantId: settings.participantId
+    };
+    const currentSettingsHash = JSON.stringify(essentialSettings);
+    const settingsChanged = lastSettingsRef.current !== currentSettingsHash;
+    
+    // Skip re-initialization if WebSocket is already set up and settings haven't changed
+    if (isWebSocketInitialized.current && hubRef.current && !settingsChanged) {
       console.log('[WebSocketStepsContext] WebSocket already initialized with current settings, skipping re-initialization');
       return;
     }
     
+    // Log settings change if applicable
+    if (settingsChanged) {
+      console.log('[WebSocketStepsContext] Settings changed, will re-initialize:', {
+        from: lastSettingsRef.current || '(empty)',
+        to: currentSettingsHash
+      });
+      lastSettingsRef.current = currentSettingsHash;
+    }
+    
     console.log('[WebSocketStepsContext] Initializing WebSocket connections with valid settings...');
+    
+    // Pre-load agents for current module if available
+    const initializeAgentsCache = async () => {
+      if (moduleSlug) {
+        try {
+          const agents = await getAgentsForCurrentModule();
+          console.log(`[WebSocketStepsContext] Pre-loaded ${agents.length} agents for module: ${moduleSlug}`);
+        } catch (error) {
+          console.warn('[WebSocketStepsContext] Failed to pre-load agents:', error);
+        }
+      }
+    };
+    
+    // Initialize agents cache before setting up WebSocket
+    initializeAgentsCache();
     
     // Try to get existing shared SDK or initialize one with proper settings
     let sdk: AgentSDK;
@@ -460,18 +635,21 @@ export const WebSocketStepsProvider: React.FC<Props> = ({ children }) => {
     const hub = sdk;
     hubRef.current = hub;
 
-    const workflowIdToStepIndex = (workflowId: string): number => {
+    const workflowIdToStepIndex = async (workflowId: string): Promise<number> => {
       // If no steps available (dashboard route), return 0 as default
       if (!hasSteps || steps.length === 0) {
         console.log(`[WebSocketStepsContext] No steps available, using default step index 0 for workflowId "${workflowId}"`);
         return 0;
       }
       
+      // Ensure agents are loaded
+      const agents = await getAgentsForCurrentModule();
+      
       // Find all steps that match this workflowType
       const matchingSteps: number[] = [];
       steps.forEach((step, index) => {
         if (!step.botId) return;
-        const agent = getAgentById(step.botId);
+        const agent = agents.find((a: any) => a.id === step.botId);
         if (agent?.workflowType === workflowId) {
           matchingSteps.push(index);
         }
@@ -491,7 +669,7 @@ export const WebSocketStepsProvider: React.FC<Props> = ({ children }) => {
       return stepIndex;
     };
 
-    const handleConnectionChange = (ev: { workflowId: string; data: ConnectionState }) => {
+    const handleConnectionChange = async (ev: { workflowId: string; data: ConnectionState }) => {
       // If no steps available (dashboard route), still update global connection state
       if (!hasSteps || steps.length === 0) {
         console.log(`[WebSocketStepsContext] Connection change for workflowId "${ev.workflowId}" (no steps to update)`);
@@ -499,11 +677,14 @@ export const WebSocketStepsProvider: React.FC<Props> = ({ children }) => {
         return;
       }
       
+      // Ensure agents are loaded
+      const agents = await getAgentsForCurrentModule();
+      
       // Find all steps that use this workflowType and update their connection states
       const matchingSteps: number[] = [];
       steps.forEach((step, index) => {
         if (!step.botId) return;
-        const agent = getAgentById(step.botId);
+        const agent = agents.find((a: any) => a.id === step.botId);
         if (agent?.workflowType === ev.workflowId) {
           matchingSteps.push(index);
         }
@@ -530,9 +711,9 @@ export const WebSocketStepsProvider: React.FC<Props> = ({ children }) => {
       });
     };
 
-    const handleMessage = (ev: { workflowId: string; data: any }) => {
+    const handleMessage = async (ev: { workflowId: string; data: any }) => {
       const raw = ev.data;
-      const stepIndex = workflowIdToStepIndex(ev.workflowId);
+      const stepIndex = await workflowIdToStepIndex(ev.workflowId);
       const chatMessage: ChatMessage = {
         ...raw,
         stepIndex
@@ -586,10 +767,14 @@ export const WebSocketStepsProvider: React.FC<Props> = ({ children }) => {
       }
       
       // Always add the message to chat history
-      addChatMessageRef.current?.(chatMessage);
+      try {
+        await addChatMessageRef.current?.(chatMessage);
+      } catch (error) {
+        console.warn('[WebSocketStepsContext] Error adding chat message:', error);
+      }
     };
 
-    const handleHandoff = (handoff: any) => {
+    const handleHandoff = async (handoff: any) => {
       console.log(`[WebSocketStepsContext] 🚀 Handoff message received:`, {
         workflowId: handoff.workflowId,
         text: handoff.text,
@@ -615,14 +800,15 @@ export const WebSocketStepsProvider: React.FC<Props> = ({ children }) => {
         direction: handoff.direction,
         messageType: 'Handoff',
         timestamp: handoff.timestamp,
-        stepIndex: workflowIdToStepIndex(handoff.workflowId),
+        stepIndex: await workflowIdToStepIndex(handoff.workflowId),
         threadId: handoff.threadId,
         data: handoff.data,
         isHistorical: handoff.isHistorical
       };
       
       // Determine target step from handoff message
-      const targetStepIndex = getTargetStepFromHandoffMessageRef.current?.(handoffChatMessage);
+      const targetStepIndexPromise = getTargetStepFromHandoffMessageRef.current?.(handoffChatMessage);
+      const targetStepIndex = targetStepIndexPromise ? await targetStepIndexPromise : null;
       
       console.log(`[WebSocketStepsContext] 🧭 Navigation decision: targetStepIndex=${targetStepIndex}, activeStep=${activeStepRef.current}`);
       
@@ -735,7 +921,7 @@ export const WebSocketStepsProvider: React.FC<Props> = ({ children }) => {
       
       hubRef.current = null;
     };
-  }, [steps, isInitialized, settingsHash]);
+  }, [steps, isInitialized, settings.agentWebsocketUrl, settings.Authorization, settings.agentApiKey, settings.tenantId, settings.participantId, isWorkflowRoute, hasSteps, getAgentById, getWorkflowTypeForStep, getStepIndexFromHandoffMessage, refreshChatHistoryForStep, setHandoffTyping, addActivityLog, clearActivityLogs, setActiveStep, moduleSlug, location.pathname]);
 
   // sendMessage using the new architecture
   const sendMessage = useCallback(async (text: string, data?: any, targetStepIndex?: number) => {
@@ -790,7 +976,7 @@ export const WebSocketStepsProvider: React.FC<Props> = ({ children }) => {
         return;
       }
 
-      const agent = getAgentForStep(step);
+      const agent = await getAgentForStep(stepIndex);
       if (!agent) {
         console.warn(`[WebSocketStepsContext] Agent not found for step ${stepIndex}`);
         return;
@@ -810,7 +996,7 @@ export const WebSocketStepsProvider: React.FC<Props> = ({ children }) => {
           threadId: getThreadId(stepIndex),
           isHistorical: false // Explicitly mark as new for highlighting
         };
-        addChatMessage(userMessage);
+        await addChatMessage(userMessage);
       }
 
       const sdk = hubRef.current!;
@@ -822,7 +1008,7 @@ export const WebSocketStepsProvider: React.FC<Props> = ({ children }) => {
     } else {
       console.warn(`[WebSocketStepsContext] Cannot send message - no steps available for stepIndex: ${stepIndex}`);
     }
-  }, [hasSteps, steps, addChatMessage, getThreadId]);
+  }, [hasSteps, steps, addChatMessage, getThreadId, getAgentForStep]);
 
   // Data subscription methods
   const subscribeToData = useCallback((subscriberId: string, messageTypes: string[], callback: (message: any) => void, _stepIndex?: number) => {

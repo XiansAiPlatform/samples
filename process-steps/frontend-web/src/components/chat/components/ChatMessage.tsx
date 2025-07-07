@@ -1,7 +1,7 @@
-import React, { useMemo } from 'react';
-import { useState, useEffect } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { ChatMessage as Message, ActivityData } from '../../../types';
-import { Agents } from '../../../modules/poa/steps';
+import { getModuleBySlug } from '../../../modules/modules';
+import { useParams } from 'react-router-dom';
 
 // Removed the local Message interface since we're importing the correct one from types
 
@@ -126,33 +126,50 @@ const useFormattedMessageContent = (content: string): JSX.Element => {
 };
 
 // Function to convert handoff message text from workflow IDs to agent titles
-const formatHandoffMessage = (text: string): string => {
+const formatHandoffMessage = async (text: string, moduleSlug?: string): Promise<string> => {
   // Expected format: 'Power of Attorney Agent v2:Representative Bot -> Power of Attorney Agent v2:Condition Bot'
   const handoffMatch = text.match(/(.+?)\s*->\s*(.+)/);
   
-  if (!handoffMatch) {
-    return text; // Return original text if format doesn't match
+  if (!handoffMatch || !moduleSlug) {
+    return text; // Return original text if format doesn't match or no module
   }
   
   const fromWorkflowId = handoffMatch[1].trim();
   const toWorkflowId = handoffMatch[2].trim();
   
-  // Find agents by matching the workflow ID (agents have "99x.io:" prefix)
-  const fromAgent = Agents.find(agent => 
-    agent.workflowId.includes(fromWorkflowId) || agent.workflowId.endsWith(fromWorkflowId)
-  );
-  const toAgent = Agents.find(agent => 
-    agent.workflowId.includes(toWorkflowId) || agent.workflowId.endsWith(toWorkflowId)
-  );
-  
-  // Use agent titles if found, otherwise fall back to original IDs
-  const fromTitle = fromAgent?.title || fromWorkflowId;
-  const toTitle = toAgent?.title || toWorkflowId;
-  
-  return `${fromTitle} → ${toTitle}`;
+  try {
+    // Get current module and load its agents
+    const module = getModuleBySlug(moduleSlug);
+    if (!module) return text;
+    
+    const { Agents } = await module.stepsLoader();
+    
+    // Find agents by matching the workflow ID
+    const fromAgent = Agents.find((agent: any) => 
+      agent.workflowType?.includes(fromWorkflowId) || agent.workflowType?.endsWith(fromWorkflowId)
+    );
+    const toAgent = Agents.find((agent: any) => 
+      agent.workflowType?.includes(toWorkflowId) || agent.workflowType?.endsWith(toWorkflowId)
+    );
+    
+    // Use agent titles if found, otherwise fall back to original IDs
+    const fromTitle = fromAgent?.title || fromWorkflowId;
+    const toTitle = toAgent?.title || toWorkflowId;
+    
+    return `${fromTitle} → ${toTitle}`;
+  } catch (error) {
+    console.warn('Failed to load agents for handoff formatting:', error);
+    return text;
+  }
 };
 
 const ChatMessageDisplay: React.FC<ChatMessageProps> = ({ message, isLastMessage = false }) => {
+  const { documentId } = useParams<{ documentId?: string }>();
+  const [formattedHandoffText, setFormattedHandoffText] = useState(message.text);
+  
+  // Determine module slug from URL
+  const moduleSlug = window.location.pathname.split('/')[1];
+  
   // Simple approach: Check if message has isHistorical flag to determine if it's new
   // New messages from the WebSocket won't have isHistorical: true
   const isNewMessage = !message.isHistorical;
@@ -163,7 +180,16 @@ const ChatMessageDisplay: React.FC<ChatMessageProps> = ({ message, isLastMessage
   const [isActivityLogExpanded, setIsActivityLogExpanded] = useState(false);
 
   // Memoize the formatted content to avoid expensive recalculations
-  const formattedContent = useFormattedMessageContent(message.text);
+  const formattedContent = useFormattedMessageContent(
+    message.messageType === 'Handoff' ? formattedHandoffText : message.text
+  );
+
+  // Format handoff messages asynchronously
+  useEffect(() => {
+    if (message.messageType === 'Handoff') {
+      formatHandoffMessage(message.text, moduleSlug).then(setFormattedHandoffText);
+    }
+  }, [message.text, message.messageType, moduleSlug]);
 
   // Check if this message has ActivityLog data
   const hasActivityLog = message.activityLog && message.activityLog.length > 0;
@@ -251,7 +277,7 @@ const ChatMessageDisplay: React.FC<ChatMessageProps> = ({ message, isLastMessage
 
   // console.log(`[ChatMessageDisplay] Rendering message ID: ${message.id}, direction: ${message.direction}`);
   if (message.messageType === 'Handoff') {
-    const displayText = formatHandoffMessage(message.text);
+    const displayText = formattedHandoffText;
     
     return (
       <div className="flex justify-center my-3">

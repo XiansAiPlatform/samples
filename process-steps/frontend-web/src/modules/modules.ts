@@ -1,6 +1,7 @@
 import React from 'react';
 
 export type ComponentLoader = () => Promise<React.ComponentType>;
+export type StepsLoader = () => Promise<{ steps: any[]; Agents: any[]; default: any[] }>;
 
 export interface Module {
   id: string;
@@ -11,6 +12,7 @@ export interface Module {
   icon?: string;
   color?: string;
   componentLoader: ComponentLoader;
+  stepsLoader: StepsLoader;
 }
 
 // Module definitions for the application
@@ -23,7 +25,8 @@ export const modules: Module[] = [
     slug: "poa",
     icon: "FiFileText",
     color: "purple",
-    componentLoader: () => import('./poa/components/Dashboard').then(m => m.default)
+    componentLoader: () => import('./poa/components/Dashboard').then(m => m.default),
+    stepsLoader: () => import('./poa/steps')
   },
   {
     id: "testament",
@@ -33,7 +36,8 @@ export const modules: Module[] = [
     slug: "testament",
     icon: "FiFileText",
     color: "blue",
-    componentLoader: () => import('./testament/components/TestamentDashboard').then(m => m.default)
+    componentLoader: () => import('./testament/components/TestamentDashboard').then(m => m.default),
+    stepsLoader: () => import('./testament/steps')
   }
 ];
 

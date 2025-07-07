@@ -1,8 +1,28 @@
 import { EntityStore } from '../../../middleware/EntityStore';
 import AgentSDK from '@99xio/xians-sdk-typescript';
 import { BaseEntity } from '../../../types';
-import { getAgentById, generateDefaultMetadata } from '../utils/stepUtils';
 import { Agents } from '../steps';
+
+// Helper function to get agent by ID
+const getAgentById = (agentId: string) => {
+  return Agents.find(agent => agent.id === agentId);
+};
+
+// Helper function to generate default metadata
+const generateDefaultMetadata = () => {
+  // Get current URL and extract relevant context
+  const currentUrl = window.location.href;
+  const urlParts = new URL(currentUrl);
+  
+  return {
+    sourceUrl: currentUrl,
+    timestamp: new Date().toISOString(),
+    userAgent: navigator.userAgent,
+    sessionId: `session_${Date.now()}`,
+    contextPath: urlParts.pathname,
+    // Add any other default metadata needed
+  };
+};
 
 export interface Principal {
   userId: string;
@@ -226,14 +246,14 @@ export class DocumentService {
 
     return new Promise((resolve) => {
       const checkConnection = () => {
-        const agent = this.getAgentById(agentId);
+        const agent = getAgentById(agentId);
         if (!agent) {
           console.warn(`[DocumentService] Agent not found: ${agentId}`);
           resolve(false);
           return;
         }
 
-        const connectionState = this.agentSDK.getAgentConnectionStateByWorkflowType(agent.workflowType);
+        const connectionState = agent.workflowType ? this.agentSDK.getAgentConnectionStateByWorkflowType(agent.workflowType) : undefined;
         
         if (connectionState?.status === 'connected') {
           console.log(`[DocumentService] Agent ${agentId} connection ready`);
@@ -256,12 +276,7 @@ export class DocumentService {
     });
   }
 
-  /**
-   * Get agent by ID - helper method
-   */
-  private getAgentById(agentId: string): any {
-    return getAgentById(agentId);
-  }
+
 
   /**
    * Fetch POA document with connection waiting and retry logic

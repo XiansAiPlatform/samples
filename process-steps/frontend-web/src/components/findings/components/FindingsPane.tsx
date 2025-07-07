@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { FiInfo, FiAlertTriangle, FiXCircle, FiChevronDown, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 import { useFindingsData } from '../hooks/useFindingsData';
-import { getAgentById, getStepIndexByBotId } from '../../../modules/poa/utils/stepUtils';
+import { getModuleBySlug } from '../../../modules/modules';
 import { useWebSocketSteps } from '../../../context/WebSocketStepsContext';
 import { useSteps } from '../../../context/StepsContext';
+import { useLocation } from 'react-router-dom';
 
 export type FindingType = 'suggestion' | 'warning' | 'error';
 
@@ -44,8 +45,6 @@ export interface Finding {
     scope?: string;
   }>;
 }
-
-
 
 const severityRank: Record<FindingType, number> = { error: 0, warning: 1, suggestion: 2 };
 
@@ -88,10 +87,33 @@ interface FindingsPaneProps {
 
 const FindingsPane: React.FC<FindingsPaneProps> = ({ isCollapsed, onToggleCollapse, onFindingsChange, hideCollapseButton }) => {
   const [expandedId, setExpandedId] = useState<number | null>(null);
+  const location = useLocation();
   
   // Use contexts for step navigation and WebSocket messaging
-  const { activeStep, setActiveStep } = useSteps();
+  const { steps, activeStep, setActiveStep } = useSteps();
   const { sendMessage, setHandoffTyping } = useWebSocketSteps();
+  
+  // Get module slug from current path
+  const moduleSlug = location.pathname.split('/')[1];
+  
+  // Generic helper functions that work with any module
+  const getAgentById = useCallback(async (botId: string) => {
+    try {
+      const module = getModuleBySlug(moduleSlug);
+      if (!module) return null;
+      
+      const { Agents } = await module.stepsLoader();
+      return Agents.find((agent: any) => agent.id === botId) || null;
+    } catch (error) {
+      console.warn('Failed to load agents:', error);
+      return null;
+    }
+  }, [moduleSlug]);
+
+  const getStepIndexByBotId = useCallback((botId: string): number | null => {
+    const stepIndex = steps.findIndex(step => step.botId === botId);
+    return stepIndex >= 0 ? stepIndex : null;
+  }, [steps]);
   
   // Use findings-specific hook that subscribes directly to audit result entities
   const {
@@ -222,7 +244,7 @@ const FindingsPane: React.FC<FindingsPaneProps> = ({ isCollapsed, onToggleCollap
         console.error(`[FindingsPane] ❌ No active step available`);
       }
     }
-  }, [activeStep, setActiveStep, sendMessage, setHandoffTyping]);
+  }, [activeStep, setActiveStep, sendMessage, setHandoffTyping, getStepIndexByBotId]);
 
   // Helper functions for loading messages
   const getLoadingMessage = () => {

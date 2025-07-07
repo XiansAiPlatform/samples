@@ -1,15 +1,48 @@
 import { useState, useEffect } from 'react';
 import { useSteps } from '../../../context/StepsContext';
 import { useWebSocketSteps } from '../../../context/WebSocketStepsContext';
-import { getAgentForStep } from '../../../modules/poa/utils/stepUtils';
+import { getModuleBySlug } from '../../../modules/modules';
+import { useLocation } from 'react-router-dom';
 
 export const useChatMessages = () => {
   const { steps, activeStep, isInitialized } = useSteps();
   const { getChatMessagesForStep, sendMessage, isConnected, connectionStates } = useWebSocketSteps();
+  const location = useLocation();
+  
+  const [currentAgent, setCurrentAgent] = useState<any>(null);
+  
+  // Get module slug from current path
+  const moduleSlug = location.pathname.split('/')[1];
   
   const currentStep = steps[activeStep] || null;
-  const currentAgent = currentStep ? getAgentForStep(currentStep) : null;
   const hasBot = Boolean(currentAgent || currentStep?.bot);
+  
+  // Load agent for current step dynamically
+  useEffect(() => {
+    const loadCurrentAgent = async () => {
+      if (!currentStep?.botId || !moduleSlug) {
+        setCurrentAgent(null);
+        return;
+      }
+      
+      try {
+        const module = getModuleBySlug(moduleSlug);
+        if (!module) {
+          setCurrentAgent(null);
+          return;
+        }
+        
+        const { Agents } = await module.stepsLoader();
+        const agent = Agents.find((a: any) => a.id === currentStep.botId);
+        setCurrentAgent(agent || null);
+      } catch (error) {
+        console.warn('[useChatMessages] Failed to load agent:', error);
+        setCurrentAgent(null);
+      }
+    };
+
+    loadCurrentAgent();
+  }, [currentStep?.botId, moduleSlug]);
   
   // Debug logging - moved to useEffect to prevent infinite renders
   useEffect(() => {

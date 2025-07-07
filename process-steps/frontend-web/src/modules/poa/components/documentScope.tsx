@@ -4,7 +4,7 @@ import { DocumentService, AuditResult } from '../services/DocumentService';
 import { useSteps } from '../../../context/StepsContext';
 import { getThemeColors, ThemeName } from '../../../components/theme';
 import AgentSDK from '@99xio/xians-sdk-typescript';
-import { getAgentById } from '../utils/stepUtils';
+import { Agents } from '../steps';
 import DocumentScopeHeader from './DocumentScopeHeader';
 
 const DocumentScope: React.FC = () => {
@@ -21,6 +21,11 @@ const DocumentScope: React.FC = () => {
   const { steps, activeStep } = useSteps();
   const currentStep = steps[activeStep];
   const themeColors = currentStep ? getThemeColors(currentStep.theme as ThemeName) : null;
+
+  // Helper function to get agent by ID
+  const getAgentById = (agentId: string) => {
+    return Agents.find(agent => agent.id === agentId);
+  };
 
   // Check connection readiness for document data flow agent
   const checkConnectionReadiness = (): boolean => {
@@ -342,7 +347,7 @@ const DocumentScope: React.FC = () => {
           <div className="text-center max-w-sm mx-auto px-4">
             <div className="w-14 h-14 sm:w-16 sm:h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
               <svg className="w-7 h-7 sm:w-8 sm:h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
             </div>
             <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-2">No Document Found</h3>

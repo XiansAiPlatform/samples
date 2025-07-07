@@ -22,6 +22,7 @@ const ChatPane: React.FC<ChatPaneProps> = ({ isCollapsed, onToggleCollapse }) =>
   const { activeStep, isInitialized } = useSteps();
   const { getChatMessagesForStep, handoffTypingStates } = useWebSocketSteps();
   
+  // ALL HOOKS MUST BE CALLED UNCONDITIONALLY
   // Custom hooks for state management
   const {
     currentStep,
@@ -63,20 +64,6 @@ const ChatPane: React.FC<ChatPaneProps> = ({ isCollapsed, onToggleCollapse }) =>
 
   // Suggestions state - now tracks collapsed vs expanded vs hidden
   const [suggestionsState, setSuggestionsState] = useState<'expanded' | 'collapsed' | 'hidden'>('expanded');
-
-  // Show loading state if not initialized or no currentStep
-  if (!isInitialized || !currentStep) {
-    return (
-      <div className="flex items-center justify-center h-full bg-gray-50">
-        <div className="text-center">
-          <div className="animate-spin w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full mx-auto mb-2"></div>
-          <div className="text-gray-500 text-sm">
-            {!isInitialized ? 'Initializing...' : 'Loading step data...'}
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   // Optimized suggestion visibility logic - show expanded when no messages, collapsed when messages exist
   const shouldSuggestionsState = useMemo(() => 
@@ -121,56 +108,72 @@ const ChatPane: React.FC<ChatPaneProps> = ({ isCollapsed, onToggleCollapse }) =>
     await handleSendMessage(suggestion);
   }, [handleSendMessage]);
 
-  // Early return if no bot configured for this step
-  if (!hasBot) {
-    return (
-      <div className="flex items-center justify-center h-full bg-gray-50 text-gray-500 text-sm p-4 text-center">
-      </div>
-    );
-  }
-
+  // SINGLE RETURN STATEMENT WITH CONDITIONAL RENDERING
   return (
     <div className="flex flex-col h-full">
-      <ChatHeader
-        bot={currentAgent || currentStep.bot!}
-        theme={currentStep.theme}
-        connectionState={connectionState}
-        isStepConnected={isStepConnected}
-        isCollapsed={isCollapsed}
-        onToggleCollapse={onToggleCollapse}
-      />
-
-      <MessageList
-        messages={currentMessages}
-        isTyping={isTyping}
-        typingStage={effectiveTypingStage}
-        connectionStatusMessage={connectionStatusMessage}
-        isChatHistoryLoading={isChatHistoryLoading}
-        hasInitiallyLoaded={hasInitiallyLoaded}
-        messagesEndRef={messagesEndRef}
-        scrollContainerRef={scrollContainerRef}
-        scrollToBottom={scrollToBottom}
-      />
-
-      {suggestionsState !== 'hidden' && isStepConnected && currentAgent?.suggestions && currentAgent.suggestions.length > 0 && (
-        <SuggestionButtons
-          theme={currentStep.theme}
-          isTyping={isTyping}
-          isCollapsed={suggestionsState === 'collapsed'}
-          suggestions={currentAgent.suggestions}
-          onSuggestionClick={handleSuggestion}
-          onToggleCollapse={() => setSuggestionsState(prev => 
-            prev === 'collapsed' ? 'expanded' : 'collapsed'
-          )}
-        />
+      {/* Loading state */}
+      {(!isInitialized || !currentStep) && (
+        <div className="flex items-center justify-center h-full bg-gray-50">
+          <div className="text-center">
+            <div className="animate-spin w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full mx-auto mb-2"></div>
+            <div className="text-gray-500 text-sm">
+              {!isInitialized ? 'Initializing...' : 'Loading step data...'}
+            </div>
+          </div>
+        </div>
       )}
 
-      <ChatInput
-        botTitle={currentAgent?.title || currentStep.bot?.title}
-        isStepConnected={isStepConnected}
-        isTyping={isTyping}
-        onSendMessage={handleSendMessage}
-      />
+      {/* No bot state */}
+      {isInitialized && currentStep && !hasBot && (
+        <div className="flex items-center justify-center h-full bg-gray-50 text-gray-500 text-sm p-4 text-center">
+        </div>
+      )}
+
+      {/* Normal chat interface */}
+      {isInitialized && currentStep && hasBot && (
+        <>
+          <ChatHeader
+            bot={currentAgent || currentStep.bot!}
+            theme={currentStep.theme}
+            connectionState={connectionState}
+            isStepConnected={isStepConnected}
+            isCollapsed={isCollapsed}
+            onToggleCollapse={onToggleCollapse}
+          />
+
+          <MessageList
+            messages={currentMessages}
+            isTyping={isTyping}
+            typingStage={effectiveTypingStage}
+            connectionStatusMessage={connectionStatusMessage}
+            isChatHistoryLoading={isChatHistoryLoading}
+            hasInitiallyLoaded={hasInitiallyLoaded}
+            messagesEndRef={messagesEndRef}
+            scrollContainerRef={scrollContainerRef}
+            scrollToBottom={scrollToBottom}
+          />
+
+          {suggestionsState !== 'hidden' && isStepConnected && currentAgent?.suggestions && currentAgent.suggestions.length > 0 && (
+            <SuggestionButtons
+              theme={currentStep.theme}
+              isTyping={isTyping}
+              isCollapsed={suggestionsState === 'collapsed'}
+              suggestions={currentAgent.suggestions}
+              onSuggestionClick={handleSuggestion}
+              onToggleCollapse={() => setSuggestionsState(prev => 
+                prev === 'collapsed' ? 'expanded' : 'collapsed'
+              )}
+            />
+          )}
+
+          <ChatInput
+            botTitle={currentAgent?.title || currentStep.bot?.title}
+            isStepConnected={isStepConnected}
+            isTyping={isTyping}
+            onSendMessage={handleSendMessage}
+          />
+        </>
+      )}
     </div>
   );
 };

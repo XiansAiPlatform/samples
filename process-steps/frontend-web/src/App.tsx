@@ -20,8 +20,6 @@ import { StepsProvider } from './context/StepsContext';
 import { SettingsProvider } from './context/SettingsContext';
 import { WebSocketStepsProvider } from './context/WebSocketStepsContext';
 import { EntityProvider } from './context/EntityContext';
-import { POA_ROUTE_PATTERN } from './modules/poa/steps';
-import { getFirstStepUrl } from './modules/poa/utils/stepUtils';
 import { modules } from './modules/modules';
 import DynamicModuleRoute from './modules/components/DynamicModuleRoute';
 
@@ -126,38 +124,44 @@ const MainLayout: React.FC = () => {
   );
 };
 
-const PowerOfAttorneyWorkflow: React.FC = () => (
-  <StepsProvider>
-    <EntityProvider>
-      <MainLayout />
-    </EntityProvider>
-  </StepsProvider>
+const ModuleWorkflow: React.FC = () => (
+  <EntityProvider>
+    <MainLayout />
+  </EntityProvider>
 );
 
 const App: React.FC = () => (
   <SettingsProvider>
     <Router>
-      <WebSocketStepsProvider>
-        <Routes>
-          {/* Redirect root to the first module dashboard */}
-          <Route path="/" element={<Navigate to={modules.length > 0 ? `/${modules[0].slug}` : "/poa"} replace />} />
-          
-          {/* Dynamic module dashboard routes */}
-          {modules.map((module) => (
-            <Route 
-              key={module.id}
-              path={`/${module.slug}`} 
-              element={<DynamicModuleRoute moduleSlug={module.slug} />} 
-            />
-          ))}
-          
-          {/* Power of Attorney workflow routes with document ID */}
-          <Route path={POA_ROUTE_PATTERN} element={<PowerOfAttorneyWorkflow />} />
-          
-          {/* Catch-all redirect to first module dashboard */}
-          <Route path="*" element={<Navigate to={modules.length > 0 ? `/${modules[0].slug}` : "/poa"} replace />} />
-        </Routes>
-      </WebSocketStepsProvider>
+      <StepsProvider>
+        <WebSocketStepsProvider>
+          <Routes>
+            {/* Redirect root to the first module dashboard */}
+            <Route path="/" element={<Navigate to={modules.length > 0 ? `/${modules[0].slug}` : "/"} replace />} />
+            
+            {/* Dynamic module dashboard routes */}
+            {modules.map((module) => (
+              <Route 
+                key={module.id}
+                path={`/${module.slug}`} 
+                element={<DynamicModuleRoute moduleSlug={module.slug} />} 
+              />
+            ))}
+            
+            {/* Dynamic module workflow routes with document ID */}
+            {modules.map((module) => (
+              <Route 
+                key={`${module.id}-workflow`}
+                path={`${module.baseUrl}/:documentId/:stepSlug`} 
+                element={<ModuleWorkflow />} 
+              />
+            ))}
+            
+            {/* Catch-all redirect to first module dashboard */}
+            <Route path="*" element={<Navigate to={modules.length > 0 ? `/${modules[0].slug}` : "/poa"} replace />} />
+          </Routes>
+        </WebSocketStepsProvider>
+      </StepsProvider>
     </Router>
   </SettingsProvider>
 );

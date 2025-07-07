@@ -3,10 +3,21 @@ import { Link } from 'react-router-dom';
 import { AiOutlineRobot } from 'react-icons/ai';
 import { useSteps } from '../context/StepsContext';
 import { getThemeColors, ThemeName } from './theme';
-import { getStepUrl } from '../modules/poa/utils/stepUtils';
 
 const StepsBar: React.FC = () => {
-  const { steps, activeStep, documentId, isInitialized } = useSteps();
+  const { steps, activeStep, documentId, isInitialized, navigateToStepByIndex } = useSteps();
+
+  // Helper to get step URL using the context
+  const getStepUrl = (stepIndex: number): string => {
+    if (!documentId) return '/';
+    // Use the context's navigation which handles module-specific URLs
+    return '#'; // Will be handled by onClick
+  };
+
+  // Handle step click
+  const handleStepClick = (stepIndex: number) => {
+    navigateToStepByIndex(stepIndex);
+  };
 
   // Don't render anything if steps are not initialized yet
   if (!isInitialized || steps.length === 0) {
@@ -27,8 +38,8 @@ const StepsBar: React.FC = () => {
           return (
             <React.Fragment key={step.title}>
               {/* Step Node */}
-              <Link
-                to={getStepUrl(step, documentId)}
+              <button
+                onClick={() => handleStepClick(index)}
                 className="flex flex-col items-center focus:outline-none flex-shrink-0 group"
               >
                 <div
@@ -43,7 +54,7 @@ const StepsBar: React.FC = () => {
                 >
                   {step.title}
                 </span>
-              </Link>
+              </button>
 
               {/* Connector Line - More visible on mobile */}
               {index < steps.length - 1 && (

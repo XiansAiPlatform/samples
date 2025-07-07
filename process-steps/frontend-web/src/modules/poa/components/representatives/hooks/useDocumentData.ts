@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useSteps } from '../../../../../context/StepsContext';
 import { DocumentService, Document, AuditResult } from '../../../services/DocumentService';
 import AgentSDK from '@99xio/xians-sdk-typescript';
-import { getAgentById } from '../../../utils/stepUtils';
+import { Agents } from '../../../steps';
 
 type ConnectionStatus = 'initializing' | 'waiting_for_connection' | 'ready' | 'failed';
 
@@ -16,6 +16,11 @@ export const useDocumentData = () => {
 
   const documentService = DocumentService.getInstance();
   const agentSDK = AgentSDK.getShared();
+
+  // Helper function to get agent by ID
+  const getAgentById = (agentId: string) => {
+    return Agents.find(agent => agent.id === agentId);
+  };
 
   // Check connection readiness for document data flow agent
   const checkConnectionReadiness = useCallback((): boolean => {
