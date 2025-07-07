@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { FiInfo, FiAlertTriangle, FiXCircle, FiChevronDown, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 import { useFindingsData } from '../hooks/useFindingsData';
 import { getModuleBySlug } from '../../../modules/modules';
-import { useWebSocketSteps } from '../../../context/WebSocketStepsContext';
+import { useWebSocketSteps } from '../../../context/websocket';
 import { useSteps } from '../../../context/StepsContext';
 import { useLocation } from 'react-router-dom';
 

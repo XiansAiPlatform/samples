@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useSteps } from '../../context/StepsContext';
-import { useWebSocketSteps } from '../../context/WebSocketStepsContext';
+import { useWebSocketSteps } from '../../context/websocket';
 
 // Custom hooks
 import { useChatMessages } from './hooks/useChatMessages';

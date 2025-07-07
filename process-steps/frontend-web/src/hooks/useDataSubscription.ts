@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
-import { useWebSocketSteps } from '../context/WebSocketStepsContext';
+import { useWebSocketSteps } from '../context/websocket';
 
 // Minimal placeholder type – adapt as needed. The concrete structure depends on
 // backend messages but we only access the generic fields inside this hook.

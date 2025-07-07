@@ -1,5 +1,5 @@
 import React, { useCallback, useState, useEffect, useRef } from 'react';
-import { useWebSocketSteps } from '../../../context/WebSocketStepsContext';
+import { useWebSocketSteps } from '../../../context/websocket';
 import { useSteps } from '../../../context/StepsContext';
 import { ActivityData } from '../../../types';
 

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useSteps } from '../../../context/StepsContext';
-import { useWebSocketSteps } from '../../../context/WebSocketStepsContext';
+import { useWebSocketSteps } from '../../../context/websocket';
 import { getModuleBySlug } from '../../../modules/modules';
 import { useLocation } from 'react-router-dom';
 

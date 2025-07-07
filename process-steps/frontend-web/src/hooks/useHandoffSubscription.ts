@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
-import { useWebSocketSteps } from '../context/WebSocketStepsContext';
+import { useWebSocketSteps } from '../context/websocket';
 import { type HandoffMessage } from '@99xio/xians-sdk-typescript';
 
 export interface HandoffSubscriptionOptions {
