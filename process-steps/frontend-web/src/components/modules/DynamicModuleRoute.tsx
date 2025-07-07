@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
-import { modules, Module } from '../modules';
-import ModuleLayout from './ModuleLayout';
+import { modules } from '../../modules/modules';
+import ModuleLayout from '../modules/ModuleLayout';
 
 interface DynamicModuleRouteProps {
   moduleSlug: string;

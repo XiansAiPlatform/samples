@@ -1,7 +1,7 @@
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { modules } from '../modules/modules';
-import DynamicModuleRoute from '../modules/components/DynamicModuleRoute';
+import DynamicModuleRoute from '../components/modules/DynamicModuleRoute';
 import ModuleWorkflow from './ModuleWorkflow';
 
 const AppRoutes: React.FC = () => {

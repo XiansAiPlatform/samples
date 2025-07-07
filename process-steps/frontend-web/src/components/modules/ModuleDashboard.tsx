@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { FiPlus, FiFileText, FiCalendar, FiUser, FiMoreVertical } from 'react-icons/fi';
-import { Module, getModuleEntityUrl } from '../modules';
+import { Module, getModuleEntityUrl } from '../../modules/modules';
 
 interface Entity {
   id: string;
