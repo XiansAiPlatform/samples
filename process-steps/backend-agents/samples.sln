@@ -1,0 +1,42 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.2.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "process-steps", "process-steps", "{A048D4D0-F49E-6446-49F2-F52E6ABA5A0B}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "backend-agents", "backend-agents", "{7C9F5854-5861-639F-C2A6-A2FF2DC5A569}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "onboarding", "onboarding", "{1EB8DF66-78A0-E859-A4AA-EB0897B775C4}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OnboardingAgent", "OnboardingAgent\OnboardingAgent.csproj", "{71273D4B-D1C3-F7E7-1FE3-6A324BF14266}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SupportAgent", "SupportAgent\SupportAgent.csproj", "{8B2F4A5C-E8D2-4F3B-9A1E-7C5D6B8F9E0A}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{71273D4B-D1C3-F7E7-1FE3-6A324BF14266}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{71273D4B-D1C3-F7E7-1FE3-6A324BF14266}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{71273D4B-D1C3-F7E7-1FE3-6A324BF14266}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{71273D4B-D1C3-F7E7-1FE3-6A324BF14266}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8B2F4A5C-E8D2-4F3B-9A1E-7C5D6B8F9E0A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8B2F4A5C-E8D2-4F3B-9A1E-7C5D6B8F9E0A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8B2F4A5C-E8D2-4F3B-9A1E-7C5D6B8F9E0A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8B2F4A5C-E8D2-4F3B-9A1E-7C5D6B8F9E0A}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{7C9F5854-5861-639F-C2A6-A2FF2DC5A569} = {A048D4D0-F49E-6446-49F2-F52E6ABA5A0B}
+		{1EB8DF66-78A0-E859-A4AA-EB0897B775C4} = {7C9F5854-5861-639F-C2A6-A2FF2DC5A569}
+		{71273D4B-D1C3-F7E7-1FE3-6A324BF14266} = {1EB8DF66-78A0-E859-A4AA-EB0897B775C4}
+		{8B2F4A5C-E8D2-4F3B-9A1E-7C5D6B8F9E0A} = {7C9F5854-5861-639F-C2A6-A2FF2DC5A569}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {F221D9D8-889F-48B5-B160-AA45428CAA27}
+	EndGlobalSection
+EndGlobal

@@ -1,0 +1,14 @@
+/Users/hasithy/Work/Flowmaxer.ai/samples/process-steps/backend-agents/support/SupportAgent/bin/Debug/net9.0/SupportAgent
+/Users/hasithy/Work/Flowmaxer.ai/samples/process-steps/backend-agents/support/SupportAgent/bin/Debug/net9.0/SupportAgent.deps.json
+/Users/hasithy/Work/Flowmaxer.ai/samples/process-steps/backend-agents/support/SupportAgent/bin/Debug/net9.0/SupportAgent.runtimeconfig.json
+/Users/hasithy/Work/Flowmaxer.ai/samples/process-steps/backend-agents/support/SupportAgent/bin/Debug/net9.0/SupportAgent.dll
+/Users/hasithy/Work/Flowmaxer.ai/samples/process-steps/backend-agents/support/SupportAgent/bin/Debug/net9.0/SupportAgent.pdb
+/Users/hasithy/Work/Flowmaxer.ai/samples/process-steps/backend-agents/support/SupportAgent/obj/Debug/net9.0/SupportAgent.GeneratedMSBuildEditorConfig.editorconfig
+/Users/hasithy/Work/Flowmaxer.ai/samples/process-steps/backend-agents/support/SupportAgent/obj/Debug/net9.0/SupportAgent.AssemblyInfoInputs.cache
+/Users/hasithy/Work/Flowmaxer.ai/samples/process-steps/backend-agents/support/SupportAgent/obj/Debug/net9.0/SupportAgent.AssemblyInfo.cs
+/Users/hasithy/Work/Flowmaxer.ai/samples/process-steps/backend-agents/support/SupportAgent/obj/Debug/net9.0/SupportAgent.csproj.CoreCompileInputs.cache
+/Users/hasithy/Work/Flowmaxer.ai/samples/process-steps/backend-agents/support/SupportAgent/obj/Debug/net9.0/SupportAgent.dll
+/Users/hasithy/Work/Flowmaxer.ai/samples/process-steps/backend-agents/support/SupportAgent/obj/Debug/net9.0/refint/SupportAgent.dll
+/Users/hasithy/Work/Flowmaxer.ai/samples/process-steps/backend-agents/support/SupportAgent/obj/Debug/net9.0/SupportAgent.pdb
+/Users/hasithy/Work/Flowmaxer.ai/samples/process-steps/backend-agents/support/SupportAgent/obj/Debug/net9.0/SupportAgent.genruntimeconfig.cache
+/Users/hasithy/Work/Flowmaxer.ai/samples/process-steps/backend-agents/support/SupportAgent/obj/Debug/net9.0/ref/SupportAgent.dll
