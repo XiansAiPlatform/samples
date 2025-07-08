@@ -1,10 +1,11 @@
-import type { StepThemeColors } from './types';
+import type { ThemeColors } from './types';
+import { getModuleBySlug } from '../modules/modules';
 
 // Define the available theme names from the Tailwind config
 export type ThemeName = 'purple' | 'warm' | 'lavender' | 'cream' | 'blue' | 'error' | 'warning' | 'info' | 'red' | 'yellow' | 'neutral';
 
 // Utility function to derive all colors from theme name
-export const getThemeColors = (themeName: ThemeName): StepThemeColors => {
+export const getThemeColors = (themeName: ThemeName): ThemeColors => {
   // Extract the base theme name (remove bg- prefix if present)
   const baseTheme = themeName.replace('bg-', '') as ThemeName;
   
@@ -22,6 +23,13 @@ export const getThemeColors = (themeName: ThemeName): StepThemeColors => {
     buttonSecondaryHover: `hover:bg-${baseTheme}-100`,
     buttonSecondaryBorder: `border-${baseTheme}-200`
   };
+};
+
+// Helper function to get theme colors for a module by slug
+export const getModuleThemeColors = (moduleSlug: string): ThemeColors | null => {
+  const module = getModuleBySlug(moduleSlug);
+  if (!module?.color) return null;
+  return getThemeColors(module.color as ThemeName);
 };
 
 // Helper function to get semantic theme colors

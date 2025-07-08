@@ -27,54 +27,47 @@ export const Agents: Agent[] = [
   }
 ];
 
-// Step definitions with simplified theme names
+// Step definitions without themes - now using module-level theming
 export const steps: StepDefinition[] = [
   {
     title: "Personal Information",
     slug: "personal-info",
-    theme: "blue",
     botId: "testament_bot",
     componentLoader: () => import('./components/PersonalInformation').then(m => m.default)
   },
   {
     title: "Assets",
     slug: "assets",
-    theme: "blue",
     botId: "testament_bot",
     componentLoader: () => import('./components/Assets').then(m => m.default)
   },
   {
     title: "Beneficiaries",
     slug: "beneficiaries",
-    theme: "blue",
     botId: "testament_bot",
     componentLoader: () => import('./components/Beneficiaries').then(m => m.default)
   },
   {
     title: "Executors",
     slug: "executors",
-    theme: "blue",
     botId: "testament_bot",
     componentLoader: () => import('./components/Executors').then(m => m.default)
   },
   {
     title: "Guardians",
     slug: "guardians",
-    theme: "blue",
     botId: "testament_bot",
     componentLoader: () => import('./components/Guardians').then(m => m.default)
   },
   {
     title: "Special Instructions",
     slug: "special-instructions",
-    theme: "blue",
     botId: "testament_bot",
     componentLoader: () => import('./components/SpecialInstructions').then(m => m.default)
   },
   {
     title: "Review & Submit",
     slug: "review",
-    theme: "blue",
     componentLoader: () => import('./components/ReviewSubmit').then(m => m.default)
   }
 ];

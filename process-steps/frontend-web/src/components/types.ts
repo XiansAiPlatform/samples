@@ -2,9 +2,7 @@ import React from 'react';
 
 export type ComponentLoader = () => Promise<React.ComponentType>;
 
-export type StepTheme = string;
-
-export interface StepThemeColors {
+export interface ThemeColors {
   bg: string;
   bgLight: string;
   bgDark: string;
@@ -40,7 +38,6 @@ export interface StepBot {
 export interface StepDefinition {
   title: string;
   slug: string;
-  theme: StepTheme;
   componentLoader?: ComponentLoader;
   botId?: string; // Reference to agent by id (preferred)
   botWorkflowId?: string; // Reference to agent by workflowId (backward compatibility)

@@ -2,10 +2,15 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { AiOutlineRobot } from 'react-icons/ai';
 import { useSteps } from '../context/StepsContext';
-import { getThemeColors, ThemeName } from './theme';
+import { getModuleThemeColors } from './theme';
+import { useLocation } from 'react-router-dom';
 
 const StepsBar: React.FC = () => {
   const { steps, activeStep, documentId, isInitialized, navigateToStepByIndex } = useSteps();
+  const location = useLocation();
+  
+  // Get module slug from location
+  const moduleSlug = location.pathname.split('/')[1];
 
   // Helper to get step URL using the context
   const getStepUrl = (stepIndex: number): string => {
@@ -30,11 +35,13 @@ const StepsBar: React.FC = () => {
     );
   }
 
+  // Get theme colors from the module
+  const themeColors = getModuleThemeColors(moduleSlug);
+
   return (
     <nav className="flex items-center justify-center px-2 sm:px-6 py-4 bg-gray-100 border-b border-gray-200 overflow-x-auto">
       <div className="flex items-center min-w-max gap-1 sm:gap-2">
         {steps.map((step, index) => {
-          const themeColors = getThemeColors(step.theme as ThemeName);
           return (
             <React.Fragment key={step.title}>
               {/* Step Node */}
@@ -44,7 +51,7 @@ const StepsBar: React.FC = () => {
               >
                 <div
                   className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-colors text-base sm:text-lg
-                    ${index === activeStep ? `${themeColors.bg} text-white` : 'bg-white border border-gray-300 text-gray-600'}`}
+                    ${index === activeStep ? `${themeColors?.bg || 'bg-blue-600'} text-white` : 'bg-white border border-gray-300 text-gray-600'}`}
                 >
                   <AiOutlineRobot />
                 </div>

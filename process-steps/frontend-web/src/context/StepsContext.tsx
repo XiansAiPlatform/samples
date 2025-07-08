@@ -1,10 +1,10 @@
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { getModuleBySlug } from '../modules/modules';
-import { StepDefinition, StepTheme, StepBot } from '../components/types';
+import { StepDefinition, StepBot } from '../components/types';
 
 // Re-export types for convenience
-export type { StepDefinition, StepTheme, StepBot };
+export type { StepDefinition, StepBot };
 
 interface StepsContextValue {
   steps: StepDefinition[];

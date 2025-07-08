@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { DocumentService, AuditResult } from '../services/DocumentService';
 import { useSteps } from '../../../context/StepsContext';
-import { getThemeColors, ThemeName } from '../../../components/theme';
+import { getModuleThemeColors } from '../../../components/theme';
+import { useLocation } from 'react-router-dom';
 import AgentSDK from '@99xio/xians-sdk-typescript';
 import { Agents } from '../steps';
 import DocumentScopeHeader from './DocumentScopeHeader';
@@ -17,10 +18,11 @@ const DocumentScope: React.FC = () => {
   const [retryCount, setRetryCount] = useState(0);
   const [connectionStatus, setConnectionStatus] = useState<'initializing' | 'waiting_for_connection' | 'ready' | 'failed'>('initializing');
   
-  // Get theme colors
-  const { steps, activeStep } = useSteps();
-  const currentStep = steps[activeStep];
-  const themeColors = currentStep ? getThemeColors(currentStep.theme as ThemeName) : null;
+  const location = useLocation();
+  
+  // Get module slug from location and theme colors from module
+  const moduleSlug = location.pathname.split('/')[1];
+  const themeColors = getModuleThemeColors(moduleSlug);
 
   // Helper function to get agent by ID
   const getAgentById = (agentId: string) => {

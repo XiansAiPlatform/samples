@@ -1,7 +1,8 @@
 import React, { useState, useEffect, Suspense } from 'react';
 import { useSteps } from '../context/StepsContext';
 import type { ComponentLoader } from './types';
-import { getThemeColors, ThemeName } from './theme';
+import { getModuleThemeColors } from './theme';
+import { useLocation } from 'react-router-dom';
 
 // Generic dynamic component loader
 const DynamicEntityComponent: React.FC<{ componentLoader: ComponentLoader }> = ({ componentLoader }) => {
@@ -100,6 +101,10 @@ const LoadingFallback: React.FC = () => (
 // Main EntityPane component
 const EntityPane: React.FC = () => {
   const { steps, activeStep, documentId, navigateToStepByIndex, isInitialized } = useSteps();
+  const location = useLocation();
+  
+  // Get module slug from location
+  const moduleSlug = location.pathname.split('/')[1];
   
   // Show loading state if not initialized yet
   if (!isInitialized || steps.length === 0) {
@@ -122,8 +127,8 @@ const EntityPane: React.FC = () => {
   
   const currentStep = steps[activeStep];
 
-  // Get theme colors from the theme name
-  const themeColors = currentStep ? getThemeColors(currentStep.theme as ThemeName) : null;
+  // Get theme colors from the module
+  const themeColors = getModuleThemeColors(moduleSlug);
 
   // Navigation functions
   const goToPreviousStep = () => {

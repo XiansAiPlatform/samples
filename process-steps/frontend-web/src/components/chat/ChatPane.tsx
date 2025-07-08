@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useSteps } from '../../context/StepsContext';
 import { useWebSocketSteps } from '../../context/websocket';
+import { useLocation } from 'react-router-dom';
+import { getModuleBySlug } from '../../modules/modules';
 
 // Custom hooks
 import { useChatMessages } from './hooks/useChatMessages';
@@ -21,6 +23,12 @@ interface ChatPaneProps {
 const ChatPane: React.FC<ChatPaneProps> = ({ isCollapsed, onToggleCollapse }) => {
   const { activeStep, isInitialized } = useSteps();
   const { getChatMessagesForStep, handoffTypingStates } = useWebSocketSteps();
+  const location = useLocation();
+  
+  // Get module slug and theme
+  const moduleSlug = location.pathname.split('/')[1];
+  const module = getModuleBySlug(moduleSlug);
+  const moduleTheme = module?.color || 'blue'; // fallback to blue if no theme found
   
   // ALL HOOKS MUST BE CALLED UNCONDITIONALLY
   // Custom hooks for state management
@@ -134,7 +142,7 @@ const ChatPane: React.FC<ChatPaneProps> = ({ isCollapsed, onToggleCollapse }) =>
         <>
           <ChatHeader
             bot={currentAgent || currentStep.bot!}
-            theme={currentStep.theme}
+            theme={moduleTheme}
             connectionState={connectionState}
             isStepConnected={isStepConnected}
             isCollapsed={isCollapsed}
@@ -155,7 +163,7 @@ const ChatPane: React.FC<ChatPaneProps> = ({ isCollapsed, onToggleCollapse }) =>
 
           {suggestionsState !== 'hidden' && isStepConnected && currentAgent?.suggestions && currentAgent.suggestions.length > 0 && (
             <SuggestionButtons
-              theme={currentStep.theme}
+              theme={moduleTheme}
               isTyping={isTyping}
               isCollapsed={suggestionsState === 'collapsed'}
               suggestions={currentAgent.suggestions}
