@@ -2,6 +2,7 @@ import { EntityStore } from '../../../middleware/EntityStore';
 import AgentSDK from '@99xio/xians-sdk-typescript';
 import { BaseEntity } from '../../../types';
 import { Agents } from '../steps';
+import { extractDocumentIdFromUrl } from '../../../context/UrlContext';
 
 // Helper function to get agent by ID
 const getAgentById = (agentId: string) => {
@@ -184,7 +185,7 @@ export class DocumentService {
     }
 
     try {
-      const documentId = this.extractDocumentIdFromURL();
+      const documentId = extractDocumentIdFromUrl();
       if (documentId) {
         console.log(`[DocumentService] Auto-fetching document from URL: ${documentId}`);
         
@@ -208,34 +209,7 @@ export class DocumentService {
     }
   }
 
-  /**
-   * Extract document ID from current URL
-   */
-  private extractDocumentIdFromURL(): string | null {
-    if (typeof window === 'undefined') return null;
-    
-    const url = new URL(window.location.href);
-    const pathParts = url.pathname.split('/').filter(part => part.length > 0);
-    
-    // Look for POA pattern: /poa/:documentId/:stepSlug
-    if (pathParts.length >= 2 && pathParts[0] === 'poa') {
-      const documentId = pathParts[1];
-      // Make sure it's not 'new' which indicates a new document
-      if (documentId && documentId !== 'new') {
-        return documentId;
-      }
-    }
-    
-    // Legacy patterns for backward compatibility
-    // e.g., /document/123, /poa/document/123, etc.
-    const documentIndex = pathParts.findIndex(part => part === 'document');
-    if (documentIndex !== -1 && pathParts[documentIndex + 1]) {
-      return pathParts[documentIndex + 1];
-    }
-    
-    // Also check query parameters
-    return url.searchParams.get('documentId');
-  }
+
 
   /**
    * Wait for agent connection to be ready
@@ -512,7 +486,7 @@ export class DocumentService {
       this.pendingRequests.delete(requestId);
 
       // Get documentId from URL or from the document itself
-      const urlDocumentId = this.extractDocumentIdFromURL();
+      const urlDocumentId = extractDocumentIdFromUrl();
       const serverDocumentId = auditResult?.document?.documentId || auditResult?.document?.id;
       const documentId = urlDocumentId || serverDocumentId;
 
@@ -565,7 +539,7 @@ export class DocumentService {
         console.log('[DocumentService] ActivityLog contains document update:', auditResult.document);
 
         // Get documentId from URL or from the document itself
-        const urlDocumentId = this.extractDocumentIdFromURL();
+        const urlDocumentId = extractDocumentIdFromUrl();
         const serverDocumentId = auditResult?.document?.documentId || auditResult?.document?.id;
         const documentId = urlDocumentId || serverDocumentId;
 

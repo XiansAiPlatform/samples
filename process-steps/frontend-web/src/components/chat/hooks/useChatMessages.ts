@@ -2,17 +2,14 @@ import { useState, useEffect } from 'react';
 import { useSteps } from '../../../context/StepsContext';
 import { useWebSocketSteps } from '../../../context/websocket';
 import { getModuleBySlug } from '../../../modules/modules';
-import { useLocation } from 'react-router-dom';
+import { useModuleSlug } from '../../../context/UrlContext';
 
 export const useChatMessages = () => {
   const { steps, activeStep, isInitialized } = useSteps();
   const { getChatMessagesForStep, sendMessage, isConnected, connectionStates } = useWebSocketSteps();
-  const location = useLocation();
+  const moduleSlug = useModuleSlug();
   
   const [currentAgent, setCurrentAgent] = useState<any>(null);
-  
-  // Get module slug from current path
-  const moduleSlug = location.pathname.split('/')[1];
   
   const currentStep = steps[activeStep] || null;
   const hasBot = Boolean(currentAgent || currentStep?.bot);

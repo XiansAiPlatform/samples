@@ -7,7 +7,9 @@ export interface SettingsData {
   participantId: string;
   // Keeping agentApiKey for backward compatibility during migration
   agentApiKey?: string;
-  // Keeping defaultMetadata for UI purposes - will be converted to getDefaultData function
+  // DEPRECATED: defaultMetadata is deprecated for document ID purposes
+  // Document ID is now automatically extracted from URL via UrlContext
+  // This field is kept for backward compatibility and non-document related metadata
   defaultMetadata?: string;
 }
 

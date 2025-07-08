@@ -1,7 +1,7 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { ChatMessage as Message, ActivityData } from '../../../types';
 import { getModuleBySlug } from '../../../modules/modules';
-import { useParams } from 'react-router-dom';
+import { useDocumentId, useModuleSlug } from '../../../context/UrlContext';
 
 // Removed the local Message interface since we're importing the correct one from types
 
@@ -164,11 +164,9 @@ const formatHandoffMessage = async (text: string, moduleSlug?: string): Promise<
 };
 
 const ChatMessageDisplay: React.FC<ChatMessageProps> = ({ message, isLastMessage = false }) => {
-  const { documentId } = useParams<{ documentId?: string }>();
+  const documentId = useDocumentId();
+  const moduleSlug = useModuleSlug();
   const [formattedHandoffText, setFormattedHandoffText] = useState(message.text);
-  
-  // Determine module slug from URL
-  const moduleSlug = window.location.pathname.split('/')[1];
   
   // Simple approach: Check if message has isHistorical flag to determine if it's new
   // New messages from the WebSocket won't have isHistorical: true
@@ -187,7 +185,7 @@ const ChatMessageDisplay: React.FC<ChatMessageProps> = ({ message, isLastMessage
   // Format handoff messages asynchronously
   useEffect(() => {
     if (message.messageType === 'Handoff') {
-      formatHandoffMessage(message.text, moduleSlug).then(setFormattedHandoffText);
+      formatHandoffMessage(message.text, moduleSlug || undefined).then(setFormattedHandoffText);
     }
   }, [message.text, message.messageType, moduleSlug]);
 

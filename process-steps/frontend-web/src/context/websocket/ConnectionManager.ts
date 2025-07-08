@@ -2,6 +2,7 @@ import { ConnectionState } from '../../types';
 import AgentSDK from '@99xio/xians-sdk-typescript';
 import { Settings, Step, Agent } from './types';
 import { AgentManager } from './AgentManager';
+import { extractDocumentIdFromUrl } from '../UrlContext';
 
 export class ConnectionManager {
   private connectionStates = new Map<number, ConnectionState>();
@@ -62,6 +63,18 @@ export class ConnectionManager {
         tenantId: settings.tenantId,
         participantId: settings.participantId,
         getDefaultData: () => {
+          // Get document ID from URL instead of settings
+          const documentId = extractDocumentIdFromUrl();
+          
+          if (documentId) {
+            console.log('[ConnectionManager] Document ID:', documentId);
+            const data = {
+              documentId: documentId
+            };
+            return JSON.stringify(data);
+          }
+          
+          // Fallback to defaultMetadata for backward compatibility if no document ID in URL
           return settings.defaultMetadata || undefined;
         }
       });
