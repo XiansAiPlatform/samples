@@ -1,1 +1,2 @@
-process-steps/backend-agents/OnboardingAgent/.env
+.env
+.DS_Store
