@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { modules } from '../../modules/modules';
-import ModuleLayout from '../modules/ModuleLayout';
+import { modules } from '../modules/modules';
+import ModuleLayout from '../components/modules/ModuleLayout';
 
-interface DynamicModuleRouteProps {
+interface ModuleDashboardRouteProps {
   moduleSlug: string;
 }
 
-const DynamicModuleRoute: React.FC<DynamicModuleRouteProps> = ({ moduleSlug }) => {
+const ModuleDashboardRoute: React.FC<ModuleDashboardRouteProps> = ({ moduleSlug }) => {
   const [ModuleComponent, setModuleComponent] = useState<React.ComponentType | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -73,4 +73,4 @@ const DynamicModuleRoute: React.FC<DynamicModuleRouteProps> = ({ moduleSlug }) =
   );
 };
 
-export default DynamicModuleRoute; 
+export default ModuleDashboardRoute; 

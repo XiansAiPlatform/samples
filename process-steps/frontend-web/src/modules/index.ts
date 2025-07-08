@@ -16,4 +16,4 @@ export { default as PoaDashboard } from './poa/components/Dashboard';
 export { default as TestamentDashboard } from './testament/components/TestamentDashboard';
 export { default as ModuleDashboard } from '../components/modules/ModuleDashboard';
 export { default as ModuleLayout } from '../components/modules/ModuleLayout';
-export { default as DynamicModuleRoute } from '../components/modules/DynamicModuleRoute'; 
+export { default as ModuleDashboardRoute } from '../routing/ModuleDashboardRoute'; 

@@ -44,20 +44,6 @@ export const useChatMessages = () => {
     loadCurrentAgent();
   }, [currentStep?.botId, moduleSlug]);
   
-  // Debug logging - moved to useEffect to prevent infinite renders
-  useEffect(() => {
-    console.log('[useChatMessages] Debug info:', {
-      activeStep,
-      currentStep: currentStep ? {
-        title: currentStep.title,
-        botId: currentStep.botId,
-        bot: currentStep.bot
-      } : null,
-      currentAgent,
-      hasBot
-    });
-  }, [activeStep, currentStep, currentAgent, hasBot]);
-  
   const currentMessages = activeStep !== null ? getChatMessagesForStep(activeStep) : [];
   const connectionState = connectionStates.get(activeStep);
   const isStepConnected = connectionState?.status === 'connected';
@@ -72,6 +58,44 @@ export const useChatMessages = () => {
     }
     return null;
   };
+
+  // Debug logging - moved to useEffect to prevent infinite renders
+  useEffect(() => {
+    console.log('[useChatMessages] Debug info:', {
+      activeStep,
+      currentStep: currentStep ? {
+        title: currentStep.title,
+        botId: currentStep.botId,
+        bot: currentStep.bot
+      } : null,
+      currentAgent,
+      hasBot
+    });
+  }, [activeStep, currentStep, currentAgent, hasBot]);
+  
+  // Add detailed connection state logging
+  useEffect(() => {
+    console.log('[useChatMessages] Connection state details:', {
+      activeStep,
+      isInitialized,
+      isConnected,
+      connectionStatesSize: connectionStates.size,
+      connectionState: connectionState ? {
+        status: connectionState.status,
+        stepIndex: connectionState.stepIndex,
+        lastActivity: connectionState.lastActivity,
+        lastError: connectionState.lastError
+      } : null,
+      isStepConnected,
+      connectionStatusMessage: getConnectionStatusMessage(),
+      allConnectionStates: Array.from(connectionStates.entries()).map(([step, state]) => ({
+        step,
+        status: state.status,
+        stepIndex: state.stepIndex,
+        lastActivity: state.lastActivity
+      }))
+    });
+  }, [activeStep, isInitialized, isConnected, connectionStates, connectionState, isStepConnected]);
 
   return {
     currentStep,

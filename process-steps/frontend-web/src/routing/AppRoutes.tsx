@@ -1,8 +1,8 @@
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { modules } from '../modules/modules';
-import DynamicModuleRoute from '../components/modules/DynamicModuleRoute';
 import ModuleWorkflow from './ModuleWorkflow';
+import { ModuleDashboardRoute } from '../modules';
 
 const AppRoutes: React.FC = () => {
   const defaultRoute = modules.length > 0 ? `/${modules[0].slug}` : '/poa';
@@ -17,7 +17,7 @@ const AppRoutes: React.FC = () => {
         <Route 
           key={module.id}
           path={`/${module.slug}`} 
-          element={<DynamicModuleRoute moduleSlug={module.slug} />} 
+          element={<ModuleDashboardRoute moduleSlug={module.slug} />} 
         />
       ))}
       
