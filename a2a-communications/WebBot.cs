@@ -31,7 +31,7 @@ public class PlayWriteMCP : IKernelModifier
     {
         if (headless)
         {
-           // arguments.Add("--headless");
+           arguments.Add("--headless");
         }
     }
 
