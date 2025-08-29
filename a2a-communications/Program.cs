@@ -13,4 +13,7 @@ superBot.AddCapabilities(typeof(SuperBotCapabilities));
 var webBot = agent.AddBot<WebBot>();
 webBot.AddKernelModifier(new PlayWriteMCP());
 
+var apiBot = agent.AddBot<ApiBot>();
+apiBot.SetDataProcessor<ApiDataProcessor>();
+
 await agent.RunAsync();

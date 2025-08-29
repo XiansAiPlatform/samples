@@ -1,4 +1,4 @@
-
+using System.Text.Json;
 using Temporalio.Workflows;
 using XiansAi.Flow;
 using XiansAi.Flow.Router.Plugins;
@@ -47,6 +47,21 @@ public static class SuperBotCapabilities
         return companyInfo;
     }
 
+
+    [Capability("Detect nationality")]
+    [Parameter("name", "Name of the person to detect nationality about")]
+    [Returns("Json formatted probability of nationality information")]
+    public static async Task<string> DetectNationality(string name)
+    {
+        _logger.LogInformation($"Detecting nationality for {name}");
+
+        // Call the API bot to detect nationality
+        var methodName = "DetectNationality";
+        var nationality = await MessageHub.Agent2Agent.SendData(typeof(ApiBot), name, methodName);
+        _logger.LogInformation($"Nationality: {nationality.Data}");
+
+        return JsonSerializer.Serialize(nationality.Data);
+    }
 }
 
 
