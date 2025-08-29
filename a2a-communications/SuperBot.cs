@@ -68,6 +68,8 @@ public static class SuperBotCapabilities
 public static class ProffCompanyInfo
 {
 
+    private static readonly Logger<object> _logger = Logger<object>.For();
+
     public static async Task<string> ExtractCompanyInformation(string proffURL)
     {
         var prompt = @$"
@@ -87,12 +89,12 @@ public static class ProffCompanyInfo
             companyName = $"{companyName} AS";
         }
         var prompt = @$"
-                1. Perform a google search for '{companyName} site:proff.no'
-                2. Find the result that is most likely to be the company's proff.no page
-                3. Return the URL of the result. Do not include any other text.
-                4. If failed, return 'ERROR: <reason>' only
+                1. Perform a duckduckgo search by visiting the below url: `https://duckduckgo.com/?t=h_&q={companyName} site:proff.no`
+                2. Find and return the URL of the first search result. Do not include any other text.
+                3. If failed, return 'ERROR: <reason>' only
             ";
         var webContent = await MessageHub.Agent2Agent.SendChat(typeof(WebBot), prompt);
+        _logger.LogInformation($"**** Proff URL: {webContent.Text}");
         return webContent.Text ?? "ERROR: Failed to find Proff URL due to no search result";
     }
 }

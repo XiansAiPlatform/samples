@@ -11,7 +11,8 @@ var superBot = agent.AddBot<SuperBot>();
 superBot.AddCapabilities(typeof(SuperBotCapabilities));
 
 var webBot = agent.AddBot<WebBot>();
-webBot.AddKernelModifier(new PlayWriteMCP());
+webBot.AddKernelModifier(new WebAutomationMCP());
+webBot.AddKernelModifier(new WebSearchMCP());
 
 var apiBot = agent.AddBot<ApiBot>();
 apiBot.SetDataProcessor<ApiDataProcessor>();
