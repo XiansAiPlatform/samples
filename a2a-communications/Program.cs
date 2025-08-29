@@ -9,6 +9,8 @@ var agent = new Agent("A2A Agent Team");
 
 var superBot = agent.AddBot<SuperBot>();
 superBot.AddCapabilities(typeof(SuperBotCapabilities));
+superBot.AddKernelModifier(new PdfGeneratorMCP());
+
 
 var webBot = agent.AddBot<WebBot>();
 webBot.AddKernelModifier(new WebAutomationMCP());
