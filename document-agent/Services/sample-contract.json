@@ -1,0 +1,113 @@
+{
+  "id": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+  "title": "Service Agreement",
+  "createdDate": "2024-01-15T00:00:00Z",
+  "effectiveDate": "2024-02-01T00:00:00Z",
+  "description": "Provision of consulting services for business process optimization including monthly consulting sessions and strategic planning",
+  "parties": [
+    {
+      "role": "client",
+      "name": "ABC Corporation",
+      "address": {
+        "street": "123 Business Ave",
+        "city": "New York",
+        "state": "NY",
+        "zipCode": "10001",
+        "country": "USA"
+      },
+      "representatives": [
+        {
+          "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+          "name": "John Smith",
+          "nationalId": "",
+          "title": "CEO",
+          "email": "john.smith@abccorp.com",
+          "phone": "+1-555-0123"
+        }
+      ],
+      "signatories": [
+        {
+          "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+          "name": "John Smith",
+          "nationalId": "",
+          "title": "CEO",
+          "email": "john.smith@abccorp.com",
+          "phone": "+1-555-0123"
+        }
+      ]
+    },
+    {
+      "role": "provider",
+      "name": "XYZ Services LLC",
+      "address": {
+        "street": "456 Service St",
+        "city": "Los Angeles",
+        "state": "CA",
+        "zipCode": "90210",
+        "country": "USA"
+      },
+      "representatives": [
+        {
+          "id": "b2c3d4e5-f6g7-8901-bcde-f12345678901",
+          "name": "Jane Doe",
+          "nationalId": "",
+          "title": "Managing Director",
+          "email": "jane.doe@xyzservices.com",
+          "phone": "+1-555-0456"
+        }
+      ],
+      "signatories": [
+        {
+          "id": "b2c3d4e5-f6g7-8901-bcde-f12345678901",
+          "name": "Jane Doe",
+          "nationalId": "",
+          "title": "Managing Director",
+          "email": "jane.doe@xyzservices.com",
+          "phone": "+1-555-0456"
+        }
+      ]
+    }
+  ],
+  "terms": [
+    {
+      "id": "f1234567-89ab-cdef-0123-456789abcdef",
+      "category": "Financial",
+      "text": "Total contract amount is $120,000 USD to be paid monthly in installments of $10,000 on the 1st of each month. Late payments will incur a fee of 1.5% per month."
+    },
+    {
+      "id": "f2345678-9abc-def0-1234-56789abcdef0",
+      "category": "Obligation", 
+      "text": "Client shall provide necessary documentation and access, make timely payments, and participate in scheduled meetings. Provider shall deliver services as specified, maintain confidentiality, and provide regular progress reports."
+    },
+    {
+      "id": "f2345678-9abc-def0-1234-56789abcdef0",
+      "category": "Obligation", 
+      "text": "Provider shall deliver services as specified, maintain confidentiality, and provide regular progress reports."
+    },
+    {
+      "id": "f3456789-abcd-ef01-2345-6789abcdef01",
+      "category": "Legal",
+      "text": "This contract shall be governed by the laws of the State of New York. Jurisdiction shall be in New York County, NY. Any disputes shall be resolved through binding arbitration."
+    },
+    {
+      "id": "f4567890-bcde-f012-3456-789abcdef012",
+      "category": "Confidentiality",
+      "text": "Both parties agree to maintain confidentiality of all information shared during the course of this agreement and shall not disclose proprietary information to third parties."
+    },
+    {
+      "id": "f5678901-cdef-0123-4567-89abcdef0123",
+      "category": "Termination",
+      "text": "Either party may terminate this agreement with 30 days written notice. Upon termination, all obligations cease except for payment of services rendered and confidentiality clauses."
+    },
+    {
+      "id": "f6789012-def0-1234-5678-9abcdef01234",
+      "category": "Duration",
+      "text": "This agreement shall be effective from February 1, 2024 through February 1, 2025, with automatic renewal unless terminated with 30 days notice."
+    },
+    {
+      "id": "f7890123-ef01-2345-6789-abcdef012345",
+      "category": "Liability",
+      "text": "Each party's liability under this agreement shall be limited to the total amount paid or payable under this contract. Neither party shall be liable for indirect, incidental, or consequential damages."
+    }
+  ]
+}

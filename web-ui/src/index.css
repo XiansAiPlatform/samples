@@ -1,0 +1,166 @@
+* {
+  box-sizing: border-box;
+}
+
+html {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+}
+
+:root {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  line-height: 1.6;
+  font-weight: 400;
+  font-size: 16px;
+
+  color-scheme: light;
+  color: #2E3440;
+  background-color: #FDFDFD;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+a {
+  font-weight: 500;
+  color: #5E81AC;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+a:hover {
+  color: #4A6491;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  width: 100%;
+  height: 100%;
+  background-color: #FDFDFD;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 400;
+  line-height: 1.3;
+  margin: 0;
+  color: #2E3440;
+}
+
+p {
+  margin: 0;
+  line-height: 1.6;
+}
+
+button {
+  border-radius: 10px;
+  border: 1px solid transparent;
+  padding: 10px 20px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  font-family: inherit;
+  background-color: #2E3440;
+  color: #FFFFFF;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  letter-spacing: 0.01em;
+}
+
+button:hover {
+  background-color: #242933;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 12px rgba(46, 52, 64, 0.08);
+}
+
+button:focus,
+button:focus-visible {
+  outline: 2px solid #5E81AC;
+  outline-offset: 2px;
+}
+
+button:disabled {
+  background-color: #E8EAED;
+  color: #80868B;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Enhanced Scrollbar styling for Scandinavian aesthetic */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #FCFCFC;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #E8EAED;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #BDC1C6;
+}
+
+/* Enhanced Focus styles for accessibility */
+*:focus-visible {
+  outline: 2px solid #5E81AC;
+  outline-offset: 2px;
+}
+
+/* Enhanced Selection styling */
+::selection {
+  background-color: #81A1C1;
+  color: #FFFFFF;
+}
+
+/* Enhanced form element styling - exclude Material-UI components */
+input:not([class*="Mui"]), textarea:not([class*="Mui"]), select:not([class*="Mui"]) {
+  font-family: inherit;
+  font-size: inherit;
+  border-radius: 12px;
+  border: 1px solid #F1F3F4;
+  padding: 10px 14px;
+  transition: border-color 0.2s ease;
+  background-color: #FEFEFE;
+}
+
+input:not([class*="Mui"]):focus, textarea:not([class*="Mui"]):focus, select:not([class*="Mui"]):focus {
+  outline: none;
+  border-color: #5E81AC;
+}
+
+/* Clean up MUI overrides */
+.MuiCssBaseline-root {
+  color-scheme: light;
+}
+
+/* Enhanced table styling */
+table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+th, td {
+  text-align: left;
+  padding: 16px 20px;
+  border-bottom: 1px solid #F8F9FA;
+}
+
+th {
+  font-weight: 600;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #80868B;
+  background-color: #FCFCFC;
+}

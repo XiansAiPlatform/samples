@@ -33,7 +33,7 @@ public static class SuperBotCapabilities
         _logger.LogInformation($"Getting company information for {companyName}");
 
         // Extract the company information from the Proff URL
-        var companyInfo = await ProffCompanyInfo.ExtractCompanyInformation(companyName);
+        var companyInfo = await ExtractCompanyInformation(companyName);
         _logger.LogInformation($"Company information: {companyInfo}");
         return companyInfo;
     }
@@ -53,14 +53,8 @@ public static class SuperBotCapabilities
 
         return JsonSerializer.Serialize(nationality.Data);
     }
-}
 
-
-public static class ProffCompanyInfo
-{
-    private static readonly Logger<object> _logger = Logger<object>.For();
-
-    public static async Task<string> ExtractCompanyInformation(string companyName)
+    private static async Task<string> ExtractCompanyInformation(string companyName)
     {
         var prompt = @$"search web for `{companyName} site:proff.no`. 
             Find the link to the first search result and goto the Proff page of the company. 

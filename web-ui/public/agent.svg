@@ -1,0 +1,20 @@
+<svg width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" fill="none">
+  <!-- Location pin base -->
+  <path d="M32 4C22 4 14 12 14 22C14 32 32 60 32 60C32 60 50 32 50 22C50 12 42 4 32 4Z" fill="rgb(251, 192, 132)"/>
+  <circle cx="32" cy="22" r="6" fill="#dddcd5"/>
+
+  <!-- AI Brain Chip inside the location pin -->
+  <rect x="26" y="16" width="12" height="12" rx="2" fill="rgb(64, 90, 96)"/>
+  <path d="M28 14V12M36 14V12M28 30V32M36 30V32M24 20H22M24 24H22M42 20H40M42 24H40" 
+        stroke="rgb(64, 90, 96)" stroke-width="2"/>
+
+  <!-- Microchip square -->
+  <path d="M30 18H34V22H30V18Z" fill="#dddcd5"/>
+
+  <!-- Chat bubble to imply AI agent -->
+  <path d="M44 42C50 42 54 46 54 50C54 54 50 58 44 58H40L36 60V56H34C30 56 26 52 26 48C26 44 30 42 34 42H44Z" 
+        fill="rgb(175, 205, 189)"/>
+  <circle cx="40" cy="48" r="1.5" fill="rgb(64, 90, 96)"/>
+  <circle cx="44" cy="48" r="1.5" fill="rgb(64, 90, 96)"/>
+  <circle cx="48" cy="48" r="1.5" fill="rgb(64, 90, 96)"/>
+</svg>

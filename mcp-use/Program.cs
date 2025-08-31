@@ -5,17 +5,19 @@ using DotNetEnv;
 Env.Load();
 
 // name your agent
-var agent = new Agent("A2A Agent Team");
+var agent = new Agent("MCP Agent Team");
 
-var superBot = agent.AddBot<SuperBot>();
-superBot.AddCapabilities(typeof(SuperBotCapabilities));
+var superBot = agent.AddBot<AssistantBot>();
+superBot.AddKernelModifier(new PdfGeneratorMCP());
+
 
 var webBot = agent.AddBot<WebBot>();
 webBot.AddKernelModifier(new WebAutomationMCP());
 webBot.AddKernelModifier(new WebSearchMCP());
 
-var apiBot = agent.AddBot<ApiBot>();
-apiBot.SetDataProcessor<ApiDataProcessor>();
+var webhookBot = agent.AddBot<WebhookBot>();
 
+var officeBot = agent.AddBot<OfficeBot>();
+officeBot.AddKernelModifier(new MicrosoftO365MCP());
 
 await agent.RunAsync();

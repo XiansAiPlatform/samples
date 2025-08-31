@@ -1,0 +1,66 @@
+{
+    "messageSubject": "DocumentUpdate",
+    "data": {
+        "contract": {
+            "id": "a4897e23-17a4-4c7a-905a-d2ee6adbc4b7",
+            "title": "ABC and PQR",
+            "createdDate": "2025-08-04T08:30:16.602387Z",
+            "effectiveDate": "2025-08-28T00:00:00",
+            "description": "software development agreement",
+            "parties": [
+                {
+                    "id": "2e672470-d014-495a-89af-bb1d02f8975e",
+                    "role": "Service Provider",
+                    "name": "99x",
+                    "representatives": [
+                        {
+                            "id": "33333333-3333-3333-3333-333333333333",
+                            "name": "Dr. Emma Rodriguez",
+                            "nationalId": "456789123",
+                            "title": "Chief Medical Officer",
+                            "email": "e.rodriguez@healthsys.org",
+                            "phone": "+1-555-0303"
+                        },
+                        {
+                            "id": "55555555-5555-5555-5555-555555555555",
+                            "name": "Lisa Thompson",
+                            "nationalId": "321654987",
+                            "title": "Financial Advisor",
+                            "email": "lisa.thompson@finance.net",
+                            "phone": "+1-555-0505"
+                        }
+                    ],
+                    "signatories": [
+                        {
+                            "id": "33333333-3333-3333-3333-333333333333",
+                            "name": "Dr. Emma Rodriguez",
+                            "nationalId": "456789123",
+                            "title": "Chief Medical Officer",
+                            "email": "e.rodriguez@healthsys.org",
+                            "phone": "+1-555-0303"
+                        }
+                    ]
+                }
+            ],
+            "terms": []
+        },
+        "validations": [
+            {
+                "severity": 0,
+                "message": "Contract must have at least two parties - Legal contracts require minimum two parties",
+                "fieldPath": "parties",
+                "suggestedAction": "Add all parties involved in the contract",
+                "priorityIndex": 1,
+                "command": null
+            },
+            {
+                "severity": 0,
+                "message": "Contract must have terms and conditions - Terms define the contract obligations",
+                "fieldPath": "terms",
+                "suggestedAction": "Add contract terms and conditions",
+                "priorityIndex": 1,
+                "command": null
+            }
+        ]
+    }
+}

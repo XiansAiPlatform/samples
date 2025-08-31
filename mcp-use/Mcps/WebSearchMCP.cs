@@ -4,7 +4,7 @@ using Microsoft.SemanticKernel;
 using ModelContextProtocol.Client;
 using XiansAi.Flow;
 
-public class WebAutomationMCP : IKernelModifier
+public class WebSearchMCP : IKernelModifier
 {
     private static List<KernelFunction>? functions;
 
@@ -13,32 +13,33 @@ public class WebAutomationMCP : IKernelModifier
     {
         if (functions == null)
         {
-            var client = await GetMCPClientForPlaywright();
+            var client = await GetMCPClient();
             var tools = await client.ListToolsAsync();
             functions = tools.Select(f => f.AsKernelFunction()).ToList();
         }
-        Console.WriteLine($"Adding Playwright Functions: {functions.Count}");
+        Console.WriteLine($"Adding Web Search Functions: {functions.Count}");
 
-        kernel.Plugins.AddFromFunctions("Playwright", functions);
+        kernel.Plugins.AddFromFunctions("brave_web_search", functions);
 
         return kernel;
     }
 
 #pragma warning restore SKEXP0001
 
-
-    public static async Task<IMcpClient> GetMCPClientForPlaywright()
+    public static async Task<IMcpClient> GetMCPClient()
     {
         var clientTransport = new StdioClientTransport(new StdioClientTransportOptions
         {
-            Name = "Playwright",
+            Name = "Brave search",
             Command = "npx",
             Arguments = new List<string>() {
                 "-y",
-                "@playwright/mcp@latest",
-                "--isolated",
-                (Env.GetString("HEADLESS") == "true") ? "--headless" : ""
+                "@modelcontextprotocol/server-brave-search"
             },
+            EnvironmentVariables = new Dictionary<string, string?>
+            {
+                { "BRAVE_API_KEY", Env.GetString("BRAVE_API_KEY") }
+            }
         });
 
         var client = await McpClientFactory.CreateAsync(clientTransport);
@@ -46,3 +47,4 @@ public class WebAutomationMCP : IKernelModifier
         return client;
     }
 }
+
