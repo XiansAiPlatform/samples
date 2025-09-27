@@ -2,6 +2,10 @@
 
 Source: [https://github.com/modelcontextprotocol/servers?tab=readme-ov-file](https://github.com/modelcontextprotocol/servers?tab=readme-ov-file)
 
+## Browser
+
+- [Browser Use](https://github.com/browser-use/browser-use)
+
 ## Voice
 
 - [ElevenLabs MCP Server](https://github.com/mamertofabian/elevenlabs-mcp-server)
