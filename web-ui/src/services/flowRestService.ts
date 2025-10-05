@@ -69,6 +69,8 @@ export class FlowRestService {
 
       const responseData = await response.json().catch(() => null);
 
+      console.log(`[FlowRestService] Response:`, responseData);
+
       if (!response.ok) {
         const errorMessage = `HTTP ${response.status}: ${response.statusText}`;
         console.error(`[FlowRestService] Request failed:`, errorMessage, responseData);
@@ -77,14 +79,14 @@ export class FlowRestService {
           success: false,
           error: errorMessage,
           statusCode: response.status,
-          data: responseData.response.data.data,
+          data: responseData.data.data,
         };
       }
 
       console.log(`[FlowRestService] ✅ Request successful:`, responseData);
       return {
         success: true,
-        data: responseData.response.data.data,
+        data: responseData.data.data,
         statusCode: response.status,
       };
 

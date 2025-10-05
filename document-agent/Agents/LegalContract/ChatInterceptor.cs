@@ -65,7 +65,7 @@ public class ChatInterceptor : IChatInterceptor
 
         try
         {
-            var propertyName = await SemanticRouterHub.ChatCompletionAsync(prompt);
+            var propertyName = await SemanticRouterHub.CompletionAsync(prompt);
             _logger.LogInformation($"Property identified: `{propertyName}` for `{messageSnippet}`");
 
             switch (propertyName)

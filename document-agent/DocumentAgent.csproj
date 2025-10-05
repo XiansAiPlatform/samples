@@ -10,7 +10,7 @@
   <ItemGroup>
     <PackageReference Include="DotNetEnv" Version="3.1.1" />
     <!-- <PackageReference Include="XiansAi.Lib" Version="2.2.0" /> -->
-    <ProjectReference Include="../../../XiansAi.Lib/XiansAi.Lib.Src/XiansAi.Lib.csproj" />
+    <ProjectReference Include="../../../platform/XiansAi.Lib/XiansAi.Lib.Src/XiansAi.Lib.csproj" />
   </ItemGroup>
 
 </Project>
