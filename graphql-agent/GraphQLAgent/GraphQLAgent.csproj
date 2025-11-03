@@ -1,0 +1,22 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="DotNetEnv" Version="3.1.1" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+    <PackageReference Include="XiansAi.Lib" Version="2.11.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Embed all knowledge base files -->
+    <EmbeddedResource Include="knowledge-base\**\*.*">
+      <LogicalName>$([System.String]::Copy('%(Identity)').Replace('\','.').Replace('/','.'))</LogicalName>
+    </EmbeddedResource>
+  </ItemGroup>
+</Project>

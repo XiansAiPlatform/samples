@@ -169,69 +169,6 @@ const EntityDetails: React.FC<EntityDetailsProps> = ({
       {/* Contract Content */}
       {displayContract && (
           <Box sx={{ p: 4, pt: 6 }}>
-            {/* Contract Description */}
-            <Box sx={{ mb: 6 }}>
-              <Box sx={{ 
-                mb: 4,
-                pb: 2,
-                borderBottom: '1px solid #F8F9FA',
-                position: 'relative'
-              }}>
-                <Typography variant="h5" sx={{ 
-                  fontWeight: 600,
-                  color: '#2E3440',
-                  letterSpacing: '-0.02em',
-                  mb: 1
-                }}>
-                  Description
-                </Typography>
-                <Typography variant="body2" sx={{ 
-                  color: '#80868B',
-                  fontWeight: 400,
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.08em',
-                  fontSize: '0.7rem'
-                }}>
-                  Contract Overview
-                </Typography>
-                <Box sx={{
-                  position: 'absolute',
-                  bottom: -1,
-                  left: 0,
-                  width: 32,
-                  height: 2,
-                  backgroundColor: '#5E81AC',
-                  borderRadius: 1
-                }} />
-              </Box>
-              <FieldWithValidations 
-                fieldPath="description"
-                validations={validations}
-                onAskAgent={sendMessageToAgent}
-              >
-                {isEditing ? (
-                  <TextField
-                    fullWidth
-                    multiline
-                    rows={3}
-                    value={displayContract.description || ''}
-                    onChange={(e) => updateEditableContract({ description: e.target.value })}
-                    placeholder="Enter contract description..."
-                    variant="outlined"
-                  />
-                ) : displayContract.description ? (
-                  <Typography variant="body1" sx={{ lineHeight: 1.6 }}>
-                    {displayContract.description}
-                  </Typography>
-                ) : (
-                  <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }}>
-                    No description provided
-                  </Typography>
-                )}
-              </FieldWithValidations>
-            </Box>
-
-            <Divider sx={{ my: 6, borderColor: '#F1F3F4', borderWidth: '1px' }} />
 
             {/* Effective Date */}
             <Box sx={{ mb: 6 }}>
@@ -295,6 +232,70 @@ const EntityDetails: React.FC<EntityDetailsProps> = ({
                 ) : (
                   <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }}>
                     No effective date set
+                  </Typography>
+                )}
+              </FieldWithValidations>
+            </Box>
+
+            <Divider sx={{ my: 6, borderColor: '#F1F3F4', borderWidth: '1px' }} />
+
+            {/* Contract Description */}
+            <Box sx={{ mb: 6 }}>
+              <Box sx={{ 
+                mb: 4,
+                pb: 2,
+                borderBottom: '1px solid #F8F9FA',
+                position: 'relative'
+              }}>
+                <Typography variant="h5" sx={{ 
+                  fontWeight: 600,
+                  color: '#2E3440',
+                  letterSpacing: '-0.02em',
+                  mb: 1
+                }}>
+                  Description
+                </Typography>
+                <Typography variant="body2" sx={{ 
+                  color: '#80868B',
+                  fontWeight: 400,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.08em',
+                  fontSize: '0.7rem'
+                }}>
+                  Contract Overview
+                </Typography>
+                <Box sx={{
+                  position: 'absolute',
+                  bottom: -1,
+                  left: 0,
+                  width: 32,
+                  height: 2,
+                  backgroundColor: '#5E81AC',
+                  borderRadius: 1
+                }} />
+              </Box>
+              <FieldWithValidations 
+                fieldPath="description"
+                validations={validations}
+                onAskAgent={sendMessageToAgent}
+              >
+                {isEditing ? (
+                  <TextField
+                    fullWidth
+                    multiline
+                    rows={3}
+                    value={displayContract.description || ''}
+                    onChange={(e) => updateEditableContract({ description: e.target.value })}
+                    placeholder="Enter contract description..."
+                    variant="outlined"
+                  />
+                ) : displayContract.description ? (
+                  <Typography variant="body1" sx={{ lineHeight: 1.6 }}>
+                    {displayContract.description}
+                  </Typography>
+                ) : (
+                  <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }}>
+                    No description provided
                   </Typography>
                 )}
               </FieldWithValidations>
