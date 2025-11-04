@@ -69,7 +69,7 @@ The agent is now active and ready to accept queries through the Xians.ai chat in
 
 ## Usage Examples
 
-- Which car brands have the highest defect rates?
+- Which top 2 car brands have the highest defect rates?
 - how many tests do we perform in average per year?
 - what are the tests done by vehicle with registration number MNO345?
 - whats the type of test we perform mostly?
